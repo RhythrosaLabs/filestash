@@ -1,4 +1,4 @@
-# Starts Filestash with the AI assistant on Windows. Safe to run again at any time.
+# Starts Sensorium on Windows. Safe to run again at any time.
 # If scripts are blocked: powershell -ExecutionPolicy Bypass -File .\start.ps1
 $ErrorActionPreference = "Stop"
 Set-Location $PSScriptRoot
@@ -41,12 +41,12 @@ Write-Host "==> building and starting (the first build takes 5 to 15 minutes)"
 docker compose @profileArgs up -d --build
 if ($LASTEXITCODE -ne 0) { exit 1 }
 
-Write-Host -NoNewline "==> waiting for Filestash"
+Write-Host -NoNewline "==> waiting for Sensorium"
 for ($i = 0; $i -lt 60; $i++) {
     try { Invoke-WebRequest -UseBasicParsing -TimeoutSec 2 http://localhost:8334/ | Out-Null; break } catch { Write-Host -NoNewline "."; Start-Sleep 2 }
 }
 Write-Host ""
 Write-Host "==> ready: http://localhost:8334"
 Write-Host "    first visit: choose an admin password, it's also the password of 'This computer' and 'Clouds (rclone)'"
-Write-Host "    add iCloud / Dropbox / Google Drive / OneDrive accounts: docker compose exec -it filestash rclone config"
+Write-Host "    add iCloud / Dropbox / Google Drive / OneDrive accounts: docker compose exec -it sensorium rclone config"
 Start-Process http://localhost:8334

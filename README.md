@@ -1,140 +1,256 @@
-> **This fork** adds an AI assistant, email, calendar, rclone clouds (iCloud, multiple Dropbox / Google Drive accounts) and social media (Bluesky, Mastodon, Instagram, YouTube).
-> To run it on your computer, see [`home/README.md`](home/README.md). Plugin docs: [`plg_widget_ai`](server/plugin/plg_widget_ai/README.md), [`plg_backend_rclone`](server/plugin/plg_backend_rclone/README.md).
-
-![screenshot](https://raw.githubusercontent.com/mickael-kerjean/filestash_images/master/.assets/photo.jpg)
-
-# What is this?
-
-<p>
-    Filestash started as a storage agnostic Dropbox-like file manager that speaks every storage protocol (<a href="https://www.filestash.app/ftp-client.html">FTP</a>, <a href="https://www.filestash.app/ssh-file-transfer.html">SFTP</a>, <a href="https://www.filestash.app/s3-browser.html">S3</a>, <a href="https://www.filestash.app/smb-client.html">SMB</a>, <a href="https://www.filestash.app/webdav-client.html">WebDAV</a>, IPFS, and <a href="https://www.filestash.app/docs/plugin/#storage">about 20 more</a>). It grew into what we want to be the world's best file management platform, centered around <strong>3 separate products</strong>:
+<p align="center">
+  <img src="docs/assets/banner.png" alt="Sensorium: every drive, cloud, inbox and feed, sensed as one" width="100%">
 </p>
 
-<ol>
-    <li><strong>Web client</strong> <i>(the file manager available from your browser)</i>: <a href="https://www.filestash.app/docs/install-and-upgrade/#configuration">documentation</a> / <a href="https://www.filestash.app/img/screenshots/feature1.png">screenshot</a> / <a href="https://demo.filestash.app">demo</a></li>
-    <li><strong>Native client</strong> <i>(to sync your data on your device)</i>: <a href="https://github.com/mickael-kerjean/fdrive">repo</a> / screenshots for <a href="https://downloads.filestash.app/img/app-filestash-www-img-screenshots-fdrive-mac.png">mac</a>, <a href="https://downloads.filestash.app/img/app-filestash-www-img-screenshots-fdrive-windows.png">windows</a>, <a href="https://downloads.filestash.app/img/app-filestash-www-img-screenshots-fdrive-linux.png">linux</a>, <a href="https://downloads.filestash.app/img/app-filestash-www-img-screenshots-fdrive-android.png">android</a> & <a href="https://downloads.filestash.app/img/app-filestash-www-img-screenshots-fdrive-iphone.png">iphone</a></li>
-    <li><strong>Gateways</strong> <i>(to expose your storages over any protocol)</i>: <a href="https://www.filestash.app/docs/guide/sftp-gateway.html#working-example">showcase</a> </li>
-</ol>
-
-<p>
-    The philosophy that guides this project is: "anything that's not a fundamental truth of the universe lives in a plugin". That keeps the core lean and fast, and the opinions replaceable, so when your requirements get deep or weird, the answer is a plugin, not a fork. You only carry the bloat you really need.
+<p align="center">
+  <b>Your self-hosted command center for every drive, cloud, inbox, calendar and social account.<br>
+  With a private AI that searches, sorts, de-duplicates, and posts for you.</b>
 </p>
 
-<p>
-    <a href="http://demo.filestash.app"><img src="https://www.filestash.app/img/illustration/filestash-integrations.png" alt="storage + auth architecture" /></a>
+<p align="center">
+  <a href="LICENSE"><img alt="License: AGPL-3.0" src="https://img.shields.io/badge/license-AGPL--3.0-8b7bff?style=flat-square"></a>
+  <img alt="Go" src="https://img.shields.io/badge/Go-1.26-22d3ee?style=flat-square&logo=go&logoColor=white">
+  <img alt="Docker" src="https://img.shields.io/badge/run%20with-Docker-2496ED?style=flat-square&logo=docker&logoColor=white">
+  <img alt="Local AI" src="https://img.shields.io/badge/AI-local%20first%20(Ollama)-f472b6?style=flat-square">
+  <img alt="MCP" src="https://img.shields.io/badge/MCP-SSE%20%2B%20Streamable%20HTTP-a598ff?style=flat-square">
+  <a href="DONATE.md"><img alt="Donate with PayPal" src="https://img.shields.io/badge/donate-PayPal%20%40noodlebake-00457C?style=flat-square&logo=paypal&logoColor=white"></a>
 </p>
 
-# Key Features
+<p align="center">
+  <a href="#-quick-start">Quick start</a> ·
+  <a href="#-what-it-does">Features</a> ·
+  <a href="#-the-assistant">Assistant</a> ·
+  <a href="#-social-autopilot">Social autopilot</a> ·
+  <a href="#-bring-your-own-agent">Agents &amp; MCP</a> ·
+  <a href="#-built-on-filestash">Credits</a> ·
+  <a href="DONATE.md">Donate</a>
+</p>
 
-<ul>
-    <li><a href="#plugins">Plugin Driven Architecture</a>: everything that matters is a plugin, browse the <a href="https://www.filestash.app/docs/plugin/">ecosystem</a> or <a href="https://www.filestash.app/docs/guide/plugin-development.html?origin=github">build your own</a>. With this approach, you get exactly what you need without overhead and bloat.</li>
-    <li>Universal Access: the web client is just one way to access your data (albeit an awesome one, handcrafted in vanilla JS). <a href="https://www.filestash.app/docs/api/#api">APIs</a> and <a href="https://www.filestash.app/docs/guide/storage-gateway.html?origin=github">Gateways</a> let you also expose your data over protocols like <a href="https://www.filestash.app/docs/guide/sftp-gateway.html?origin=github">SFTP</a>, S3, FTP, WebDAV, <a href="https://www.filestash.app/docs/guide/mcp-gateway.html?origin=github">MCP</a>, and AS2.</li>
-    <li><a href="https://www.filestash.app/docs/plugin/#storage">Integrations</a>: our explicit goal is to support 100% of storage and authentication technologies on the market. Beyond your usual options, you can go much further, like a <a href="https://www.filestash.app/docs/guide/virtual-filesystem.html?origin=github">virtual filesystem</a> delegating authentication to your <a href="https://github.com/mickael-kerjean/filestash/tree/master/server/plugin/plg_authenticate_wordpress">WordPress site</a> and using its roles to drive <a href="https://www.filestash.app/docs/guide/authorization.html#option-2-rbac">RBAC authorization</a>.</li>
-    <li><a href="https://www.filestash.app/docs/guide/workflow-engine.html">Workflow Engine</a>: automate anything that happens to your files by chaining actions on events, from simple notifications via Slack or email to full on MFT pipelines and everything in between.</li>
-    <li>File Apps: use any of the existing apps or <a href="https://www.filestash.app/docs/guide/plugin-development.html#xdg-open-plugins-in-depth">build your own</a>, from astronomy to embroidery and everything in between like:
-        <ul>
-            <li><a href="https://demo.filestash.app/assets/plugin/application_photography.zip">photography</a>: heif, nef, raf, <a href="https://www.filestash.app/tools/tiff-viewer.html">tiff</a>, raw, arw, sr2, srf, nrw, cr2, crw, x3f, pef, rw2, orf, mrw, mdc, mef, mos, dcr, kdc, 3fr, erf and srw</li>
-            <li><a href="https://demo.filestash.app/assets/plugin/application_photography.zip">astronomy</a>: <a href="https://www.filestash.app/tools/fits-viewer.html">fits</a>, <a href="https://www.filestash.app/tools/xisf-viewer.html">xisf</a></li>
-            <li><a href="https://demo.filestash.app/assets/plugin/application_science.zip">science</a>: with latex, plantuml & pandoc compilers</li>
-            <li><a href="https://demo.filestash.app/assets/plugin/application_musician.zip">music</a>: mid, midi, gp4 and gp5</li>
-            <li><a href="https://demo.filestash.app/assets/plugin/application_gis.zip">GIS</a>: <a href="https://www.filestash.app/tools/geojson-viewer.html">geojson</a>, <a href="https://www.filestash.app/tools/shp-viewer.html">shp</a>, gpx, wms and <a href="https://www.filestash.app/tools/dbf-viewer.html">dbf</a></li>
-            <li><a href="https://demo.filestash.app/assets/plugin/application_engineering.zip">data engineering</a>: <a href="https://www.filestash.app/tools/parquet-viewer.html">parquet</a>, <a href="https://www.filestash.app/tools/arrow-viewer.html">arrow</a>, <a href="https://www.filestash.app/tools/feather-viewer.html">feather</a>, <a href="https://www.filestash.app/tools/avro-viewer.html">avro</a>, <a href="https://www.filestash.app/tools/orc-viewer.html">orc</a>, <a href="https://www.filestash.app/tools/hdf5-viewer.html">hdf5</a>, <a href="https://www.filestash.app/tools/hdf5-viewer.html">h5</a>, <a href="https://www.filestash.app/tools/netcdf-viewer.html">netcdf</a>, <a href="https://www.filestash.app/tools/netcdf-viewer.html">nc</a>, rds, rda and rdata</li>
-            <li><a href="https://demo.filestash.app/assets/plugin/application_dev.zip">dev</a>: a, so, o, dylib, dll, tar, tgz, zip, har, cap, pcap, pcapng and <a href="https://www.filestash.app/tools/sqlite-viewer.html">sqlite</a></li>
-            <li><a href="https://demo.filestash.app/assets/plugin/application_creative.zip">creative work</a>: svg, <a href="https://www.filestash.app/tools/psd-viewer.html">psd</a>, ai, <a href="https://www.filestash.app/tools/sketch-viewer.html">sketch</a>, <a href="https://www.filestash.app/tools/cdr-viewer.html">cdr</a>, woff, woff2, ttf, otf, eot, exr, tga, pgm, ppm, dds, ktx, dpx, pcx, xpm, pnm, xbm, aai, xwd, cin, pbm, pcd, sgi, wbmp and rgb</li>
-            <li><a href="https://demo.filestash.app/assets/plugin/application_biomed.zip">biomedical</a>: dicom, sam, bam, cif, pdb, xyz, sdf, mol, mol2 and mmtf</li>
-            <li><a href="https://demo.filestash.app/assets/plugin/application_autodesk.zip">autodesk</a>: <a href="https://www.filestash.app/tools/dwg-viewer.html">dwg</a> and <a href="https://www.filestash.app/tools/dxf-viewer.html">dxf</a></li>
-            <li><a href="https://demo.filestash.app/assets/plugin/application_adobe.zip">adobe</a>: <a href="https://www.filestash.app/tools/psd-viewer.html">psd</a>, ai, <a href="https://www.filestash.app/tools/xd-viewer.html">xd</a>, <a href="https://www.filestash.app/tools/dng-viewer.html">dng</a>, <a href="https://www.filestash.app/tools/eps-viewer.html">postscript</a>, aco, ase, swf</li>
-            <li><a href="https://demo.filestash.app/assets/plugin/application_3d.zip">3d</a>: fbx, gltf, obj, stl, step, mesh, ifc, dae</li>
-            <li><a href="https://demo.filestash.app/assets/plugin/application_embroidery.zip">embroidery</a>: dgt, dst, dsb, dsz, edr, exp, 10o, col, hus, inf, jef, ksm, pcm, pcs, pes, sew, shv, sst, tap, u01, vip, vp3 and xxx</li>
-            <li><a href="https://github.com/mickael-kerjean/filestash/tree/master/server/plugin/plg_widget_pgp">e2e</a>: pgp, gpg</li>
-        </ul>
-    </li>
-    <li>Themes: <br>
-        <img src="https://www.filestash.app/img/screenshots/theme_github.png" height="150" />
-        <img src="https://www.filestash.app/img/screenshots/theme_apple.png" height="150" />
-        <img src="https://www.filestash.app/img/screenshots/theme_dropbox.png" height="150" />
-        <img src="https://www.filestash.app/img/screenshots/theme_ibm.png" height="150" />
-    </li>
-    <li>AI features for <a href="https://www.filestash.app/docs/guide/search.html">search</a>, <a href="https://www.filestash.app/features/smart-folder.html">smart folders</a> and OCRs.</li>
-    <li>... and much <sub>much <sub>more (versioning, audit, public site, antivirus, quota, chat, chromecast support, on demand video transcoding, mounting shared links as network drive, ...)</sub></sub> As a rule of thumb, if your problem involves files, we either already <a href="https://www.filestash.app/docs/plugin/">have a plugin</a> for it or can make a plugin for it</li>
-</ul>
+---
 
-# Plugins
+Your stuff is everywhere: two Dropbox accounts, a couple of Google Drives, iCloud, an external drive, your phone,
+three inboxes, a calendar, and the social accounts you post your work to. **Sensorium puts all of it in one place you
+own**, running on your own computer, and adds an assistant that can actually *do* things: find the file you're thinking
+of, clean up your Downloads, spot duplicates across accounts, and turn a folder of photos into a posting schedule.
 
-**Malleability** isn't an afterthought, it's the whole architecture:
+No subscription and no cloud middleman. Your files never leave your machine unless you choose a hosted AI model.
 
-> anything that's not a fundamental truth of the universe lives in a plugin
+<p align="center">
+  <img src="docs/screenshots/hello.png" alt="Sensorium with the assistant open" width="100%">
+</p>
 
-Taken literally, the "truths of the universe" are a set of [core interfaces](https://github.com/mickael-kerjean/filestash/tree/master/server/pkg/core), one for every key component of Filestash, and they're yours to implement (storage, authentication, authorisation, search, thumbnailing, apps, middleware, frontend changes, ...)
+## ✦ What it does
 
-The oldest one is the storage interface, the one at work whenever you connect to a storage:
+| | |
+|---|---|
+| 🗂️ **One place for every storage** | Local disks, external drives, other computers (SFTP/SMB), phones (WebDAV), S3, and **any of rclone's 70+ clouds**: iCloud Drive, OneDrive, Box, and as many Dropbox / Google Drive accounts as you have. |
+| ✉️ **Email & calendar as files** | IMAP mailboxes show up as folders of `.eml` files, and CalDAV calendars as folders of `.ics` events. Browse, search, move and let the AI read them like anything else. |
+| ✦ **An assistant that acts** | Search by name or by content, read, summarize, rename, move, create folders, find exact duplicates. It runs on a **local model** (Ollama) or any OpenAI-compatible API. |
+| 🧠 **Memory that grows** | It remembers your preferences and conventions ("invoices go in /Documents/Invoices") and learns from what it did before. You can review and delete memories at any time. |
+| 📣 **Social autopilot** | Bluesky, Mastodon, Instagram and YouTube: drafts, scheduled posts, and one inbox for replies, mentions, DMs and comments. **Routines** turn the next file of a folder into a post on a schedule, with a caption written in your voice. |
+| 🔌 **Bring your own agent** | A built-in MCP server (SSE and Streamable HTTP) lets DeepSeek Harness, Hermes Agent, Claude Desktop and other MCP clients work on your files, locked to the folder you choose. |
+| ⚡ **Jev fast-path** *(optional)* | With a [TypeSafe Jev](https://typesafe.ai) key, sorting hundreds of files and triaging notifications takes a fraction of a second per item. |
+| 🌙 **A modern look** | A dark, glassy interface with gradient accents, designed to feel calm and quick. |
 
-```go
-type IBackend interface {
-	Ls(path string) ([]os.FileInfo, error)
-	Stat(path string) (os.FileInfo, error)
-	Cat(path string) (io.ReadCloser, error)
-	Mkdir(path string) error
-	Rm(path string) error
-	Mv(from string, to string) error
-	Save(path string, file io.Reader) error
-	Touch(path string) error
-}
+<table>
+  <tr>
+    <td width="50%"><img src="docs/screenshots/assistant.png" alt="The assistant tidying a Downloads folder"><br><sub><b>"Clean up my Downloads"</b>: moves an invoice next to the others, files a screenshot, finds an exact duplicate and asks before deleting it.</sub></td>
+    <td width="50%"><img src="docs/screenshots/social.png" alt="Creating a posting routine and a draft"><br><sub><b>Social autopilot</b>: a weekly routine from a photo folder, plus a draft that waits for your click.</sub></td>
+  </tr>
+  <tr>
+    <td width="50%"><img src="docs/screenshots/inbox.png" alt="Summary of new notifications and messages"><br><sub><b>"What's new on my socials?"</b>: replies, mentions and DMs across accounts.</sub></td>
+    <td width="50%"><img src="docs/screenshots/login.png" alt="Sign in to any connected source"><br><sub><b>Every source, one sign-in page</b>: this computer, clouds, email, calendar, other computers, phones.</sub></td>
+  </tr>
+</table>
+
+<sub>The screenshots show the real app on a demo library. The assistant's words in them come from a scripted demo
+model, but every action shown (moves, the duplicate check, drafts, routines, the Bluesky inbox) was actually carried out
+by Sensorium.</sub>
+
+## 🚀 Quick start
+
+You need [Docker Desktop](https://www.docker.com/products/docker-desktop/). On a Mac, also install the
+[Ollama app](https://ollama.com/download) for fast, native local AI.
+
+```sh
+git clone https://github.com/RhythrosaLabs/sensorium.git
+cd sensorium/home
+./start.sh                                              # macOS / Linux
+powershell -ExecutionPolicy Bypass -File .\start.ps1    # Windows
 ```
 
-Historically, plugins were made in Go and [compiled in](https://www.filestash.app/docs/guide/plugin-development.html#compiled-plugin). Today there's a second path: [runtime plugins](https://www.filestash.app/docs/guide/plugin-development.html#runtime-plugins), a zip you drop in the plugins folder. The zip can reshape the frontend and it can carry wasm implementing the very same core interfaces. That wasm runs in a VM with tight control on permissions: no declared network host, no way to phone home. Installing a plugin doesn't mean trusting it with everything.
+The script checks Docker and uses your Ollama app if it's running (otherwise it starts Ollama in Docker and downloads
+the model). It then builds Sensorium and opens **http://localhost:8334**. The first run takes 5 to 15 minutes; after
+that it starts in seconds.
 
-For example:
-```rust
-use filestash::*;
+1. Choose an admin password.
+2. Open http://localhost:8334/login, pick **This computer**, and enter that password.
+3. Click ✦ (or press <kbd>ctrl</kbd>+<kbd>k</kbd>) and ask for something.
 
-#[derive(Default)]
-pub struct Plugin;
+Add clouds with `./rclone-config.sh` (iCloud, Dropbox, Google Drive, OneDrive…), and email, calendar, other computers
+and phones from the login page. Full walkthrough and settings: **[home/README.md](home/README.md)**.
 
-impl Authorisation for Plugin {
-    fn ls(&self, _ctx: &Context, path: &str) -> Decision {
-        self.check(path)
-    }
-    fn cat(&self, _ctx: &Context, path: &str) -> Decision { ... }
-    fn stat(&self, _ctx: &Context, path: &str) -> Decision { ... }
-}
+## ✦ The assistant
 
-impl Plugin {
-    fn check(&self, path: &str) -> Decision {
-        if path.split("/").any(|segment| segment == "top_secret") {
-            log::warn!("[TOPSECRET] access denied !!");
-            return Decision::Deny;
-        }
-        Decision::Allow
-    }
-}
+Things to ask:
 
-register!(Plugin: Authorisation);
+- *"Find duplicates in my Photos and tell me how much space I'd get back."*
+- *"Sort my Downloads into Invoices, Photos, Code and Other."*
+- *"Which contract mentions a 30 day notice period?"* (searches inside documents)
+- *"Summarize the newest file in this folder."*
+- *"Rename these scans with the date they were taken."*
+
+**What it can do:** list, read, search by name, search inside documents (full-text index), find duplicates (size +
+SHA-256), create folders, move and rename, classify many files at once (with Jev), remember and forget.
+
+**Guardrails:**
+
+- It acts as **you**, through the same permission checks as the rest of the app, and only inside the storage you're
+  signed in to.
+- **Nothing is ever deleted without your click.** Deletions come back as a confirmation button.
+- Every move and rename is listed in the chat, so you can see exactly what changed.
+- People who open a public share link don't get the assistant, its memory or your accounts.
+
+**Models:**
+
+| | Setting | Notes |
+|---|---|---|
+| Local, free | Ollama `qwen3:8b` (default), `qwen3:14b`, `hermes3`, `llama3.1` | Pick a model with the **tools** tag. For routines that describe photos, a vision model like `qwen2.5vl` or `gemma3` sees the image. |
+| Hosted | DeepSeek (`https://api.deepseek.com/v1`, `deepseek-chat`), OpenRouter, any OpenAI-compatible API | Faster on small machines; your prompts then go to that provider. |
+
+## 📣 Social autopilot
+
+| Network | Posting | Inbox | Setup |
+|---|---|---|---|
+| **Bluesky** | text, up to 4 images, clickable links | notifications and DMs | app password |
+| **Mastodon** | text, images, video | notifications, DMs | access token |
+| **Instagram** | photos, carousels, reels | comments on recent posts | Business/Creator account plus a Meta token; your instance must be reachable from the internet |
+| **YouTube** | video uploads (streamed, up to 4 GB), title and description | comments on your latest videos | one-time Google OAuth client, then "Sign in with Google" |
+
+- **Drafts first.** Anything the assistant writes waits for your **Publish** click, now or at a scheduled time.
+- **Routines.** *"Every Monday and Thursday at 6pm, post the next photo of /Art to Instagram, short, add #art."*
+  Sensorium picks the next unposted file, writes the caption (looking at the image with a vision model), and
+  publishes it, or saves it as a draft if you asked to review first.
+- **One inbox.** *"What's new on my socials?"* gathers replies, mentions, DMs and comments across accounts. With Jev,
+  each item is marked "needs a reply" with an urgency level.
+
+Credentials are verified when you connect, stored encrypted, and never sent to the AI model. Setup guides:
+[plg_widget_ai/README.md](server/plugin/plg_widget_ai/README.md).
+
+## 🔌 Bring your own agent
+
+Sensorium includes an MCP server with both the SSE transport and the newer **Streamable HTTP** transport (`/mcp`).
+Click the plug icon in the assistant to get a token and ready-to-paste configs:
+
+```sh
+# DeepSeek Harness: save the generated filestash.cordis.yml, then
+npx @deepseek-ai/dsh web --patch "$PWD/filestash.cordis.yml"
 ```
-These few lines give you a readonly view of your data where every folder named "top_secret" is off limits. For more examples, browse the [plugin folder](https://github.com/mickael-kerjean/filestash/tree/master/server/plugin), [the runtime plugin cookbook](https://github.com/mickael-kerjean/filestash/tree/master/server/plugin/plg_runtime_cookbook), and [the plugin marketplace](https://www.filestash.app/docs/plugin).
 
-And to be clear, code is the power-user path, there are [no code options](https://www.filestash.app/docs/guide/authorization.html)
+Any MCP client that speaks Streamable HTTP works the same way (Hermes Agent, Claude Desktop, your own scripts).
+Agents are **confined to the folder of the session the token came from**.
 
-# Getting Started
+## 🧭 How it fits together
 
-To install Filestash, head to the [Getting started](https://www.filestash.app/docs/?origin=github) guide. If you want to leverage plugins, head over to the [inventory](https://www.filestash.app/docs/plugin/?origin=github), or learn about [developing your own plugins](https://www.filestash.app/docs/guide/plugin-development.html?origin=github).
+```mermaid
+flowchart LR
+  subgraph Sources
+    A[This computer / drives] --- B[rclone: iCloud, Dropbox ×N, Drive ×N, OneDrive…]
+    B --- C[Email IMAP] --- D[Calendar CalDAV] --- E[SFTP · SMB · WebDAV · S3]
+  end
+  Sources --> F[Sensorium<br/>file manager core]
+  F --> G[✦ Assistant<br/>tools · memory · guardrails]
+  G <--> H[(Local model<br/>Ollama)]
+  G -. optional .-> I[Hosted model / Jev]
+  G --> J[Social autopilot<br/>Bluesky · Mastodon · Instagram · YouTube]
+  F --> K[MCP server<br/>SSE + Streamable HTTP]
+  K --> L[DeepSeek Harness · Hermes · Claude…]
+```
 
-# Support
+Everything is a plugin, in the spirit of Filestash:
 
-- Commercial Users → [support contract](https://www.filestash.app/pricing/?origin=github)
-- For individuals:
-  - [#filestash](https://kiwiirc.com/nextclient/#irc://irc.libera.chat/#filestash?nick=guest??) on IRC (libera.chat)
-  - Bitcoin: `3LX5KGmSmHDj5EuXrmUvcg77EJxCxmdsgW`
-  - [Open Collective](https://opencollective.com/filestash)
+| Plugin | What it adds |
+|---|---|
+| `plg_widget_ai` | the assistant, memory, social autopilot, Jev, the agent connect button |
+| `plg_backend_rclone` | any rclone remote as storage |
+| `plg_backend_imap` | email as files |
+| `plg_backend_caldav` | calendars as files |
+| `plg_handler_mcp` | Streamable HTTP transport and folder confinement, added to Filestash's MCP server |
+| `plg_theme_sensorium` | the dark interface |
+| *(enabled from Filestash)* `plg_search_sqlitefts`, `plg_widget_recent`, `plg_widget_favourite`, `plg_video_thumbnail` | full-text search, recent files with AI search, favourites, video thumbnails |
 
+## 🔒 Privacy & security
 
-# Why
+- **Self-hosted.** Runs on your machine in Docker, as a non-root user.
+- **Local AI by default.** With Ollama, nothing leaves your computer.
+- **Secrets encrypted at rest.** Social credentials and the sessions saved for routines are encrypted with the
+  instance key.
+- **Least privilege for agents.** MCP tokens are locked to the folder the session was opened on, and path escapes are
+  rejected.
+- **Human in the loop.** No deletion without a click. Posts written by the assistant are drafts until you approve them.
 
-Familiar with the infamous comment from Dropbox's launch on HN? In my memory it goes like this:
+## 📍 Status
 
-<img src="https://raw.githubusercontent.com/mickael-kerjean/filestash_images/master/.assets/hn.png" />
+Sensorium is a young personal project, shared as-is. What has been verified:
 
-# Credits
+- The full app builds and runs. First-run setup, login, the assistant, the theme and the MCP endpoints were tested end
+  to end in a real browser, using the same Docker Compose setup as `home/` with a locally built binary. The Docker
+  image build itself mirrors Filestash's official Dockerfile but hasn't been run end to end yet.
+- Every new plugin has automated tests: rclone against a real rclone binary, email and calendar against real
+  IMAP/CalDAV server libraries, and the assistant, social networks, YouTube, Jev and MCP against faithful fakes of
+  their APIs, including a race-detector run.
+- The MCP endpoint was tested with the official MCP client libraries, including the exact one DeepSeek Harness uses.
 
-Filestash stands on the shoulder of: [contributors](https://github.com/mickael-kerjean/filestash/graphs/contributors), folks developing [awesome libraries](https://github.com/mickael-kerjean/filestash/blob/master/go.mod), [BrandonM](https://news.ycombinator.com/user?id=BrandonM), a whole bunch of C stuff (the [C standard library](https://imgs.xkcd.com/comics/dependency.png), [libjpeg](https://libjpeg-turbo.org/), [libpng](https://www.libpng.org/pub/png/libpng.html), [libgif](https://giflib.sourceforge.net/), [libraw](https://www.libraw.org/about) and many more), [fontawesome](https://fontawesome.com), [material](https://material.io/icons/), [Browser stack](https://www.browserstack.com/) to let us test on real devices, and the many guys from Nebraska and elsewhere who have been thanklessly maintaining the critical pieces that Filestash sits on top:
+**Not yet verified against the live services:** real AI models, and real Bluesky / Mastodon / Instagram / YouTube /
+Jev accounts. If something breaks with a real account, please open an issue.
 
-<img src="https://imgs.xkcd.com/comics/dependency.png" alt="credit to the nebraska guy on xkcd" />
+**Not supported (yet):** Google Calendar (needs its own OAuth flow), Instagram DMs (needs Meta app review), X/Twitter
+(paid API).
+
+**Ideas for later:** a GitHub backend covering all your repos, Canva designs as files, Threads / TikTok / LinkedIn, a
+daily digest of your socials.
+
+## 🛠️ Development
+
+```sh
+go test ./server/plugin/plg_widget_ai/ ./server/plugin/plg_backend_rclone/ \
+        ./server/plugin/plg_backend_imap/ ./server/plugin/plg_backend_caldav/ \
+        ./server/plugin/plg_handler_mcp/ ./server/plugin/plg_theme_sensorium/
+```
+
+The complete build needs the image and video libraries listed in [home/Dockerfile](home/Dockerfile). The simplest way
+to build is the Docker setup in `home/`.
+
+## 💜 Built on Filestash
+
+Sensorium stands on the shoulders of **[Filestash](https://github.com/mickael-kerjean/filestash)** by
+**Mickael Kerjean** and contributors: a superb, storage-agnostic file manager with a plugin architecture that made all
+of this possible. The file manager, the storage connectors, the viewers, the workflow engine, the MCP server and the
+core UI are theirs. Sensorium adds plugins, a theme and a home setup on top.
+
+If you need a rock-solid file manager for your team, or enterprise features and support, go straight to the source:
+**[filestash.app](https://www.filestash.app)**. The original README is kept at
+[docs/FILESTASH_README.md](docs/FILESTASH_README.md), and the details of what changed are in [NOTICE.md](NOTICE.md).
+
+## 📄 License
+
+[AGPL-3.0](LICENSE), like Filestash. You can use, study, change and share Sensorium. If you run a modified version
+as a service for others, you must offer them its source code.
+
+## ☕ Support
+
+Sensorium is made on nights and weekends. If it saves you time or makes your creative life easier, you can support it
+here:
+
+<p align="center">
+  <a href="https://www.paypal.com/paypalme/noodlebake"><img alt="Donate with PayPal" src="https://img.shields.io/badge/Donate-PayPal%20%40noodlebake-00457C?style=for-the-badge&logo=paypal&logoColor=white"></a>
+</p>
+
+More on the [donation page](DONATE.md). Starring the repo and sharing it helps too. ⭐
+
+---
+
+<p align="center">
+  <sub>#selfhosted #homelab #localai #ollama #ai #aiagents #mcp #filemanager #privacy #opensource #golang #docker
+  #rclone #icloud #dropbox #googledrive #bluesky #mastodon #instagram #youtube #creators #automation #productivity #deepseek</sub>
+</p>

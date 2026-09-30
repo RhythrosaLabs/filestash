@@ -1,5 +1,5 @@
 #!/bin/sh
-# Starts Filestash with the AI assistant. Safe to run again at any time.
+# Starts Sensorium. Safe to run again at any time.
 set -e
 cd "$(dirname "$0")"
 
@@ -14,7 +14,7 @@ fi
 
 if [ ! -f .env ]; then
     cat > .env <<ENV
-# folder of this computer shown in Filestash as "This computer"
+# folder of this computer shown in Sensorium as "This computer"
 FILES_DIR="$HOME"
 # local model used by the assistant (needs tool calling: qwen3, hermes3, llama3.1, ...)
 AI_MODEL=qwen3:8b
@@ -47,10 +47,10 @@ export AI_BASE_URL
 echo "==> building and starting (the first build takes 5 to 15 minutes)"
 docker compose $PROFILE up -d --build
 
-printf "==> waiting for Filestash"
+printf "==> waiting for Sensorium"
 i=0
 until curl -s -o /dev/null http://localhost:8334/; do
-    i=$((i + 1)); [ $i -gt 60 ] && { echo; echo "not up yet, check: docker compose logs filestash"; exit 1; }
+    i=$((i + 1)); [ $i -gt 60 ] && { echo; echo "not up yet, check: docker compose logs sensorium"; exit 1; }
     printf "."; sleep 2
 done
 echo

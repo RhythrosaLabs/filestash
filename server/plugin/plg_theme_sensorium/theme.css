@@ -1,0 +1,288 @@
+/* ============================================================
+   Sensorium theme
+   dark, glassy, gradient accents. Built on Filestash's tokens.
+   ============================================================ */
+html body, html body.dark-mode {
+    --bg-color: #0a0b10;
+    --color: #eceef4;
+    --light: #9aa1b2;
+    --super-light: #141722;
+    --dark: #1b1e2a;
+    --surface: #1b1e2a;
+    --border: rgba(255, 255, 255, 0.08);
+    --primary: #8b7bff;
+    --emphasis: #a598ff;
+    --emphasis-primary: rgba(139, 123, 255, 0.18);
+    --emphasis-secondary: #c9c2ff;
+    --success: #34d399;
+    --error: #fb7185;
+    --sn-surface: rgba(22, 24, 34, 0.72);
+    --sn-surface-solid: #141722;
+    --sn-surface-hover: rgba(34, 37, 52, 0.85);
+    --sn-glass-border: rgba(255, 255, 255, 0.09);
+    --sn-gradient: linear-gradient(135deg, #22d3ee 0%, #8b7bff 50%, #f472b6 100%);
+    --sn-glow: 0 10px 40px -10px rgba(139, 123, 255, 0.55);
+    --sn-radius: 16px;
+    color-scheme: dark;
+    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", Inter, "Segoe UI", Roboto, "Helvetica Neue", sans-serif;
+    -webkit-font-smoothing: antialiased;
+    letter-spacing: -0.01em;
+    color: var(--color);
+    background:
+        radial-gradient(1200px 600px at -10% -20%, rgba(139, 123, 255, 0.16), transparent 60%),
+        radial-gradient(900px 500px at 110% 110%, rgba(34, 211, 238, 0.10), transparent 60%),
+        #0a0b10 fixed;
+}
+html body.dark-mode ::selection { background: rgba(139, 123, 255, 0.4); }
+html body.dark-mode * { scrollbar-width: thin; scrollbar-color: rgba(255, 255, 255, 0.15) transparent; }
+html body.dark-mode ::-webkit-scrollbar { width: 10px; height: 10px; }
+html body.dark-mode ::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.12); border-radius: 10px; border: 3px solid transparent; background-clip: padding-box; }
+html body.dark-mode a { color: inherit; }
+html body.dark-mode img.component_icon[src^="data:image/svg"] { filter: none; }
+
+/* ---------------- login ---------------- */
+html body.dark-mode .component_page_connect {
+    background:
+        radial-gradient(800px 500px at 20% 10%, rgba(139, 123, 255, 0.28), transparent 60%),
+        radial-gradient(700px 500px at 85% 90%, rgba(244, 114, 182, 0.18), transparent 60%),
+        radial-gradient(600px 400px at 90% 10%, rgba(34, 211, 238, 0.16), transparent 60%),
+        #07080c;
+    min-height: 100vh;
+}
+html body.dark-mode .component_page_connect .component_container { display: flex; flex-direction: column; }
+html body.dark-mode .component_page_connect .component_container::before {
+    content: "Sensorium";
+    display: block;
+    text-align: center;
+    font-size: clamp(40px, 7vw, 64px);
+    font-weight: 800;
+    letter-spacing: -0.04em;
+    margin: 0 0 6px;
+    background: var(--sn-gradient);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+}
+html body.dark-mode .component_page_connect .component_container::after {
+    content: "Every drive, cloud, inbox & feed, sensed as one.";
+    display: block;
+    text-align: center;
+    color: var(--light);
+    font-size: 17px;
+    margin: 0;
+    order: -1;
+}
+html body.dark-mode .component_page_connect .component_container::before { order: -2; }
+html body.dark-mode .component_page_connection_form .buttons {
+    background: var(--sn-surface);
+    border: 1px solid var(--sn-glass-border);
+    border-radius: 999px;
+    padding: 5px;
+    box-shadow: none;
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    gap: 4px;
+    margin-top: 26px;
+    -webkit-mask-image: linear-gradient(to right, #000 88%, transparent);
+    mask-image: linear-gradient(to right, #000 88%, transparent);
+    scrollbar-width: none;
+}
+html body.dark-mode .component_page_connection_form .buttons button {
+    border-radius: 999px;
+    color: var(--light);
+    background: transparent;
+    font-weight: 500;
+    font-size: 14px;
+    padding: 10px 16px;
+    white-space: nowrap;
+    flex: 1 0 auto;
+    width: auto;
+    min-width: 0;
+    transition: background .2s, color .2s;
+}
+html body.dark-mode .component_page_connection_form label, html body .component_page_connection_form .advanced { color: var(--light); }
+html body.dark-mode .component_page_connection_form .buttons button:hover { color: var(--color); background: rgba(255, 255, 255, 0.06); }
+html body.dark-mode .component_page_connection_form .buttons button.active,
+html body.dark-mode .component_page_connection_form .buttons button.active.primary {
+    background: var(--sn-gradient);
+    color: #fff;
+    box-shadow: var(--sn-glow);
+}
+html body.dark-mode .component_page_connection_form .box,
+html body.dark-mode .component_page_connection_form [data-bind=form] {
+    background: var(--sn-surface);
+    border: 1px solid var(--sn-glass-border);
+    border-radius: 22px;
+    box-shadow: 0 30px 80px -30px rgba(0, 0, 0, 0.8);
+    backdrop-filter: blur(24px);
+    -webkit-backdrop-filter: blur(24px);
+}
+html body.dark-mode .component_page_connection_form [data-bind=form] { padding: 18px 20px 20px; margin-top: 14px; }
+html body.dark-mode .component_page_connection_form input,
+html body.dark-mode .component_page_connection_form select {
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid var(--sn-glass-border);
+    border-radius: 12px;
+    color: var(--color);
+    padding: 13px 14px;
+    transition: border-color .2s, box-shadow .2s;
+}
+html body.dark-mode .component_page_connection_form input:focus {
+    border-color: rgba(139, 123, 255, 0.7);
+    box-shadow: 0 0 0 4px rgba(139, 123, 255, 0.18);
+}
+html body.dark-mode .component_page_connection_form input::placeholder { color: #6b7385; }
+html body.dark-mode button.emphasis,
+html body.dark-mode .component_page_connection_form button.emphasis,
+html body.common_response_page button,
+html body.dark-mode .common_response_page .btn {
+    background: var(--sn-gradient);
+    color: #fff;
+    border: none;
+    border-radius: 12px;
+    font-weight: 600;
+    letter-spacing: 0;
+    box-shadow: var(--sn-glow);
+    transition: transform .15s, filter .15s;
+}
+html body.dark-mode button.emphasis:hover { filter: brightness(1.08); transform: translateY(-1px); }
+html body.dark-mode .component_forkme { display: none; }
+html body.dark-mode .component_poweredbyfilestash { opacity: .55; }
+html body.dark-mode .component_poweredbyfilestash, html body .component_poweredbyfilestash a { color: var(--light); }
+
+/* passthrough / message pages (password prompt, errors) */
+html body.common_response_page {
+    background:
+        radial-gradient(800px 500px at 20% 10%, rgba(139, 123, 255, 0.25), transparent 60%),
+        #07080c;
+    color: var(--color);
+}
+html body.common_response_page input:not([type="checkbox"]) {
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 12px;
+    color: #eceef4;
+}
+
+/* ---------------- file manager shell ---------------- */
+html body.dark-mode .component_filemanager_shell { background: transparent; }
+html body.dark-mode .component_filemanager_shell > div:not(.component_sidebar) { background: transparent; }
+html body.dark-mode .component_sidebar {
+    background: rgba(12, 13, 19, 0.78);
+    border-right: 1px solid var(--border);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+}
+html body.dark-mode .component_sidebar h3 { color: var(--light); font-weight: 600; letter-spacing: 0; }
+html body.dark-mode .component_sidebar a,
+html body.dark-mode .component_sidebar li > div,
+html body.dark-mode .component_sidebar [data-bind] li {
+    border-radius: 10px;
+    color: var(--color);
+}
+html body.dark-mode .component_sidebar a:hover { background: rgba(255, 255, 255, 0.05); }
+html body.dark-mode .component_sidebar .active,
+html body.dark-mode .component_sidebar a.active { background: var(--emphasis-primary); color: #fff; }
+html body.dark-mode .component_sidebar input {
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    color: var(--color);
+}
+
+html body.dark-mode .component_breadcrumb { background: transparent; }
+html body.dark-mode .component_breadcrumb .component_path-element .label { font-weight: 700; letter-spacing: -0.02em; font-size: 1.05em; }
+html body.dark-mode .component_breadcrumb .component_path-element .label { color: var(--color); opacity: 1; }
+html body.dark-mode .component_breadcrumb .component_path-element a.label { color: var(--light); }
+
+html body.dark-mode .component_page_filespage { background: transparent; }
+html body.dark-mode.scrolling [is="component_submenu"], html body .scrolling [is="component_submenu"] {
+    background: rgba(10, 11, 16, 0.75);
+    border-bottom: 1px solid var(--border);
+    box-shadow: none;
+}
+html body.dark-mode .component_submenu {
+    background: transparent;
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+}
+html body.dark-mode [is="component_submenu"] .component_submenu .action button {
+    color: var(--light);
+    border-radius: 999px;
+    padding: 7px 14px;
+    text-transform: none;
+    font-size: 13px;
+    font-weight: 500 !important;
+    letter-spacing: 0;
+    transition: background .2s, color .2s;
+}
+html body.dark-mode .component_submenu .action button:hover { background: rgba(255, 255, 255, 0.06); color: var(--color); }
+html body.dark-mode .component_submenu .action.left button {
+    border: 1px solid var(--sn-glass-border);
+    margin-right: 6px;
+}
+html body.dark-mode .component_submenu input {
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid var(--sn-glass-border);
+    border-radius: 999px;
+    color: var(--color);
+    padding: 6px 14px;
+}
+html body.dark-mode .component_submenu img.component_icon { filter: invert(1) brightness(1.4); opacity: .75; }
+
+/* files & folders */
+html body.dark-mode .component_thing {
+    border-radius: var(--sn-radius);
+    transition: transform .18s ease, box-shadow .18s ease, background .18s ease;
+}
+html body.dark-mode .component_thing.view-grid,
+html body.dark-mode .component_thing.view-grid > * { border-radius: var(--sn-radius); }
+html body.dark-mode .component_thing.view-grid {
+    background: var(--sn-surface);
+    border: 1px solid var(--sn-glass-border);
+    overflow: hidden;
+}
+html body.dark-mode .component_thing.view-grid:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 18px 40px -18px rgba(0, 0, 0, 0.9), 0 0 0 1px rgba(139, 123, 255, 0.45);
+    background: var(--sn-surface-hover);
+}
+html body.dark-mode .component_thing.view-list { border-radius: 12px; }
+html body.dark-mode .component_thing.view-list:hover { background: rgba(255, 255, 255, 0.04); }
+html body.dark-mode .component_thing .component_filename,
+html body.dark-mode .component_thing .file-details { color: var(--color); }
+html body.dark-mode .component_thing.selected,
+html body.dark-mode .component_thing.view-grid.selected {
+    background: rgba(139, 123, 255, 0.16);
+    box-shadow: 0 0 0 2px rgba(139, 123, 255, 0.8);
+}
+
+/* upload button */
+html body.dark-mode .component_mobilefileupload label, html body.dark-mode .component_mobilefileupload label:hover {
+    background: rgba(28, 31, 44, 0.9);
+    border: 1px solid var(--sn-glass-border);
+    box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.8);
+    backdrop-filter: blur(16px);
+}
+
+/* modals, dropdowns, notifications */
+html body.dark-mode component-modal .component_modal > div,
+html body.dark-mode .component_modal .box,
+html body.dark-mode .component_dropdown .dropdown_container {
+    background: var(--sn-surface-solid);
+    border: 1px solid var(--sn-glass-border);
+    border-radius: 18px;
+    color: var(--color);
+    box-shadow: 0 30px 80px -20px rgba(0, 0, 0, 0.9);
+}
+html body.dark-mode .component_notification .no-select > div {
+    background: var(--sn-surface-solid);
+    border: 1px solid var(--sn-glass-border);
+    border-radius: 14px;
+    color: var(--color);
+}
+
+/* shared form controls */
+html body.dark-mode input[type="text"], html body input[type="password"], html body input[type="number"], html body textarea, html body select {
+    color-scheme: dark;
+}

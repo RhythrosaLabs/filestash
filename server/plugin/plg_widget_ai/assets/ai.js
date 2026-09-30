@@ -25,7 +25,21 @@ const fmt = (s) => esc(s)
     .replace(/```([\s\S]*?)```/g, "<pre>$1</pre>")
     .replace(/`([^`]+)`/g, "<code>$1</code>")
     .replace(/\*\*([^*]+)\*\*/g, "<b>$1</b>")
+    .replace(/(^|[\s(])\*([^*\n]+)\*(?=[\s.,;:!?)]|$)/gm, "$1<i>$2</i>")
     .replace(/\n/g, "<br>");
+
+const icon = (d) => `<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${d}</svg>`;
+const ICONS = {
+    accounts: icon('<path d="M10 13a5 5 0 0 0 7.5.5l3-3a5 5 0 0 0-7-7l-1.7 1.7"/><path d="M14 11a5 5 0 0 0-7.5-.5l-3 3a5 5 0 0 0 7 7l1.7-1.7"/>'),
+    queue: icon('<rect x="3" y="4" width="18" height="18" rx="3"/><path d="M16 2v4M8 2v4M3 10h18"/>'),
+    memory: icon('<path d="M9 18h6M10 22h4M12 2a7 7 0 0 0-4 12.7V17h8v-2.3A7 7 0 0 0 12 2z"/>'),
+    agent: icon('<path d="M12 22v-5M9 8V2M15 8V2M18 8v5a6 6 0 0 1-12 0V8z"/>'),
+    clear: icon('<path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5"/>'),
+    close: icon('<path d="M18 6 6 18M6 6l12 12"/>'),
+    send: icon('<path d="M5 12h14M13 6l6 6-6 6"/>'),
+    spark: `<svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true"><path fill="currentColor" d="M12 2c.4 4.6 2.9 7.6 8 8.5v1c-5.1.9-7.6 3.9-8 8.5h-1c-.4-4.6-2.9-7.6-8-8.5v-1c5.1-.9 7.6-3.9 8-8.5z"/></svg>`,
+};
+const SUGGESTIONS = ["Find duplicates here", "Tidy up this folder", "What's new on my socials?", "Summarize the newest file"];
 
 export default function() {
     if (document.querySelector(".plg_widget_ai")) return;
@@ -36,23 +50,23 @@ export default function() {
     $root.className = "plg_widget_ai";
     $root.innerHTML = `
         <style>${CSS}</style>
-        <button class="ai-fab" title="AI assistant (ctrl+k)" aria-label="AI assistant">✦</button>
-        <section class="ai-panel hidden" aria-label="AI assistant">
+        <button class="ai-fab" title="Assistant (ctrl+k)" aria-label="Assistant">${ICONS.spark}</button>
+        <section class="ai-panel hidden" aria-label="Assistant">
             <header>
-                <strong>Assistant</strong>
+                <strong><span class="ai-spark">${ICONS.spark}</span> Assistant</strong>
                 <span>
-                    <button data-act="accounts" title="Social accounts">🔗</button>
-                    <button data-act="queue" title="Scheduled posts and routines">📅</button>
-                    <button data-act="memory" title="What I remember">🧠</button>
-                    <button data-act="agent" title="Connect an external agent (DeepSeek Harness, Hermes, Claude…)">🔌</button>
-                    <button data-act="clear" title="New conversation">⟲</button>
-                    <button data-act="close" title="Close">✕</button>
+                    <button data-act="accounts" title="Social accounts">${ICONS.accounts}</button>
+                    <button data-act="queue" title="Scheduled posts and routines">${ICONS.queue}</button>
+                    <button data-act="memory" title="What I remember">${ICONS.memory}</button>
+                    <button data-act="agent" title="Connect an external agent (DeepSeek Harness, Hermes, Claude…)">${ICONS.agent}</button>
+                    <button data-act="clear" title="New conversation">${ICONS.clear}</button>
+                    <button data-act="close" title="Close">${ICONS.close}</button>
                 </span>
             </header>
             <div class="ai-log" aria-live="polite"></div>
             <form>
-                <textarea rows="2" placeholder="Ask about your files or socials…"></textarea>
-                <button type="submit">Send</button>
+                <textarea rows="1" placeholder="Ask about your files or socials…"></textarea>
+                <button type="submit" title="Send" aria-label="Send">${ICONS.send}</button>
             </form>
         </section>`;
     document.body.appendChild($root);
@@ -73,7 +87,18 @@ export default function() {
     };
     const renderHistory = () => {
         $log.innerHTML = "";
-        if (history.length === 0) add("assistant", "Hi! I can search, read, analyse, rename, move and de-duplicate files in this storage. What should we do?");
+        if (history.length === 0) {
+            const $hello = add("assistant ai-hello", `<h2>Hi there</h2><p>I can search, sort, de-duplicate and post your files, and read what's new on your socials.</p>`);
+            const $chips = document.createElement("div");
+            $chips.className = "ai-chips";
+            SUGGESTIONS.forEach((text) => {
+                const $c = document.createElement("button");
+                $c.textContent = text;
+                $c.onclick = () => send(text);
+                $chips.appendChild($c);
+            });
+            $hello.appendChild($chips);
+        }
         history.forEach((m) => add(m.role, fmt(m.content)));
     };
 
@@ -186,7 +211,7 @@ export default function() {
     }).catch((err) => add("assistant", "⚠️ " + esc(err.message)));
 
     const showQueue = () => api("social/queue").then(({ posts, routines }) => {
-        const $m = add("assistant", posts.length || routines.length ? "" : "No posts or routines yet. Try: <i>every Monday at 6pm post the next photo of /Art to instagram</i>");
+        const $m = add("assistant", posts.length || routines.length ? "<b>Scheduled posts &amp; routines</b>" : "No posts or routines yet. Try: <i>every Monday at 6pm post the next photo of /Art to instagram</i>");
         routines.forEach((r) => {
             const $row = document.createElement("div");
             $row.className = "ai-mem";
@@ -234,7 +259,7 @@ export default function() {
         if (busy || !message.trim()) return;
         busy = true;
         add("user", fmt(message));
-        const $wait = add("assistant thinking", "thinking…");
+        const $wait = add("assistant thinking", `<span class="ai-dots"><i></i><i></i><i></i></span>`);
         api("chat", { method: "POST", body: JSON.stringify({ message, history, path: currentPath() }) })
             .then((res) => {
                 $wait.remove();
@@ -258,8 +283,10 @@ export default function() {
     }).catch((err) => add("assistant", "⚠️ " + esc(err.message)));
 
     $root.querySelector(".ai-fab").onclick = () => toggle();
+    $input.addEventListener("input", () => { $input.style.height = "auto"; $input.style.height = Math.min($input.scrollHeight, 160) + "px"; });
     $root.addEventListener("click", (e) => {
-        const act = e.target.getAttribute && e.target.getAttribute("data-act");
+        const $btn = e.target.closest && e.target.closest("[data-act]");
+        const act = $btn && $btn.getAttribute("data-act");
         if (act === "close") toggle(false);
         else if (act === "clear") { history = []; save(history); renderHistory(); }
         else if (act === "memory") showMemory();
@@ -268,7 +295,7 @@ export default function() {
         else if (act === "agent") showAgent();
         else if (act === "reload") location.reload();
     });
-    $root.querySelector("section > form").onsubmit = (e) => { e.preventDefault(); const v = $input.value; $input.value = ""; send(v); };
+    $root.querySelector("section > form").onsubmit = (e) => { e.preventDefault(); const v = $input.value; $input.value = ""; $input.style.height = "auto"; send(v); };
     $input.onkeydown = (e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); $root.querySelector("section > form").requestSubmit(); } };
     window.addEventListener("keydown", (e) => { if (e.key === "k" && (e.ctrlKey || e.metaKey)) { e.preventDefault(); toggle(); } });
     window.addEventListener("message", (e) => { if (e.origin === location.origin && e.data === "plg_widget_ai:accounts") showAccounts(); });
@@ -276,31 +303,98 @@ export default function() {
 }
 
 const CSS = `
-.plg_widget_ai { --ai-bg: #fff; --ai-fg: #373a3c; --ai-muted: #f2f3f5; --ai-accent: #466372; --ai-border: #e2e2e2; }
-@media (prefers-color-scheme: dark) { .plg_widget_ai { --ai-bg: #1f2124; --ai-fg: #e6e6e6; --ai-muted: #2b2e32; --ai-accent: #8fb3c5; --ai-border: #3a3d42; } }
-.plg_widget_ai .ai-fab { position: fixed; right: 20px; bottom: 88px; z-index: 1000; width: 48px; height: 48px; border-radius: 50%; border: none; background: var(--ai-accent); color: #fff; font-size: 20px; cursor: pointer; box-shadow: 0 4px 14px rgba(0,0,0,.25); }
-.plg_widget_ai .ai-panel { position: fixed; right: 20px; bottom: 148px; z-index: 1000; width: min(420px, calc(100vw - 32px)); height: min(600px, calc(100vh - 180px)); display: flex; flex-direction: column; background: var(--ai-bg); color: var(--ai-fg); border: 1px solid var(--ai-border); border-radius: 10px; box-shadow: 0 10px 30px rgba(0,0,0,.25); overflow: hidden; }
+.plg_widget_ai {
+    --ai-bg: rgba(14, 16, 24, 0.86); --ai-solid: #10121a; --ai-fg: #eceef4; --ai-muted: rgba(255, 255, 255, 0.05);
+    --ai-light: #9aa1b2; --ai-border: rgba(255, 255, 255, 0.09); --ai-accent: #8b7bff;
+    --ai-gradient: linear-gradient(135deg, #22d3ee 0%, #8b7bff 50%, #f472b6 100%);
+    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", Inter, "Segoe UI", Roboto, sans-serif;
+    letter-spacing: -0.01em;
+}
+.plg_widget_ai button { font: inherit; }
+.plg_widget_ai .ai-fab {
+    position: fixed; right: 22px; bottom: 90px; z-index: 1000; width: 54px; height: 54px; border-radius: 50%;
+    border: none; color: #fff; cursor: pointer; display: grid; place-items: center;
+    background: var(--ai-gradient); box-shadow: 0 10px 34px -6px rgba(139, 123, 255, 0.75);
+    transition: transform .2s ease, box-shadow .2s ease;
+}
+.plg_widget_ai .ai-fab::before {
+    content: ""; position: absolute; inset: -3px; border-radius: 50%; z-index: -1; filter: blur(10px); opacity: .7;
+    background: conic-gradient(from 0deg, #22d3ee, #8b7bff, #f472b6, #22d3ee); animation: ai-spin 6s linear infinite;
+}
+.plg_widget_ai .ai-fab:hover { transform: scale(1.06); }
+@keyframes ai-spin { to { transform: rotate(360deg); } }
+.plg_widget_ai .ai-panel {
+    position: fixed; right: 22px; bottom: 156px; z-index: 1000; width: min(440px, calc(100vw - 32px)); height: min(640px, calc(100vh - 190px));
+    display: flex; flex-direction: column; color: var(--ai-fg); background: var(--ai-bg);
+    border: 1px solid var(--ai-border); border-radius: 24px; overflow: hidden;
+    box-shadow: 0 40px 100px -30px rgba(0, 0, 0, 0.9), 0 0 0 1px rgba(139, 123, 255, 0.12);
+    backdrop-filter: blur(28px) saturate(140%); -webkit-backdrop-filter: blur(28px) saturate(140%);
+    animation: ai-in .22s ease-out;
+}
+@keyframes ai-in { from { opacity: 0; transform: translateY(10px) scale(.98); } }
 .plg_widget_ai .ai-panel.hidden { display: none; }
-.plg_widget_ai header { display: flex; justify-content: space-between; align-items: center; padding: 10px 12px; border-bottom: 1px solid var(--ai-border); }
-.plg_widget_ai header button { background: none; border: none; color: inherit; cursor: pointer; font-size: 15px; padding: 2px 6px; }
-.plg_widget_ai .ai-log { flex: 1; overflow-y: auto; padding: 12px; font-size: 14px; line-height: 1.45; }
-.plg_widget_ai .ai-msg { margin: 0 0 10px; padding: 8px 10px; border-radius: 8px; background: var(--ai-muted); word-wrap: break-word; }
-.plg_widget_ai .ai-msg.user { background: var(--ai-accent); color: #fff; margin-left: 40px; }
-.plg_widget_ai .ai-msg.thinking { opacity: .6; font-style: italic; }
-.plg_widget_ai pre { white-space: pre-wrap; word-break: break-all; font-size: 12px; margin: 6px 0 0; }
-.plg_widget_ai code { font-size: 12px; }
-.plg_widget_ai .ai-log a { color: var(--ai-accent); word-break: break-all; }
-.plg_widget_ai details { margin-top: 6px; font-size: 12px; opacity: .8; }
-.plg_widget_ai .ai-actions, .plg_widget_ai .ai-confirm, .plg_widget_ai .ai-mem { margin-top: 8px; padding-top: 6px; border-top: 1px dashed var(--ai-border); font-size: 13px; }
-.plg_widget_ai .ai-msg button { margin: 4px 4px 0 0; padding: 4px 10px; cursor: pointer; font: inherit; font-size: 13px; color: var(--ai-fg); background: var(--ai-bg); border: 1px solid var(--ai-border); border-radius: 5px; text-transform: none; }
-.plg_widget_ai .ai-msg button[data-yes] { background: var(--ai-accent); border-color: var(--ai-accent); color: #fff; }
-.plg_widget_ai blockquote { margin: 6px 0; padding: 6px 8px; border-left: 3px solid var(--ai-accent); background: var(--ai-bg); border-radius: 4px; }
-.plg_widget_ai .ai-account-form { display: flex; flex-direction: column; gap: 6px; padding: 8px 0 0; border: none; }
-.plg_widget_ai .ai-account-form input, .plg_widget_ai .ai-account-form select { padding: 6px; border: 1px solid var(--ai-border); border-radius: 6px; background: var(--ai-bg); color: inherit; font: inherit; }
-.plg_widget_ai .ai-account-form [data-fields] { display: flex; flex-direction: column; gap: 6px; }
-.plg_widget_ai .ai-account-form button { align-self: flex-start; padding: 6px 14px; }
-.plg_widget_ai .ai-account-form small { opacity: .8; line-height: 1.4; }
-.plg_widget_ai > section > form { display: flex; gap: 8px; padding: 10px; border-top: 1px solid var(--ai-border); }
-.plg_widget_ai > section > form textarea { flex: 1; resize: none; border: 1px solid var(--ai-border); border-radius: 6px; padding: 6px 8px; font: inherit; background: var(--ai-bg); color: inherit; }
-.plg_widget_ai > section > form button { border: none; border-radius: 6px; padding: 0 14px; background: var(--ai-accent); color: #fff; cursor: pointer; }
+.plg_widget_ai header { display: flex; justify-content: space-between; align-items: center; padding: 14px 14px 12px 18px; border-bottom: 1px solid var(--ai-border); }
+.plg_widget_ai header strong { display: flex; align-items: center; gap: 8px; font-size: 15px; font-weight: 650; }
+.plg_widget_ai .ai-spark { display: inline-grid; width: 22px; height: 22px; place-items: center; }
+.plg_widget_ai .ai-spark svg { width: 20px; height: 20px; }
+.plg_widget_ai header strong .ai-spark { color: #a598ff; }
+.plg_widget_ai header span { display: flex; gap: 2px; }
+.plg_widget_ai header button {
+    display: grid; place-items: center; width: 32px; height: 32px; border-radius: 10px; border: none; background: transparent;
+    color: var(--ai-light); cursor: pointer; transition: background .15s, color .15s; padding: 0;
+}
+.plg_widget_ai header button:hover { background: var(--ai-muted); color: var(--ai-fg); }
+.plg_widget_ai .ai-log { flex: 1; overflow-y: auto; padding: 18px; font-size: 14.5px; line-height: 1.55; }
+.plg_widget_ai .ai-msg { margin: 0 0 16px; word-wrap: break-word; }
+.plg_widget_ai .ai-msg.user {
+    margin-left: auto; max-width: 85%; width: fit-content; padding: 10px 14px; border-radius: 18px 18px 6px 18px;
+    background: rgba(139, 123, 255, 0.16); border: 1px solid rgba(139, 123, 255, 0.28);
+}
+.plg_widget_ai .ai-msg.assistant { padding: 0 2px; }
+.plg_widget_ai .ai-hello h2 {
+    display: inline-block; margin: 8px 0 4px; font-size: 30px; font-weight: 750; letter-spacing: -0.03em; line-height: 1.15;
+    background: var(--ai-gradient); -webkit-background-clip: text; background-clip: text; color: transparent;
+}
+.plg_widget_ai .ai-hello p { margin: 0 0 14px; color: var(--ai-light); }
+.plg_widget_ai .ai-chips { display: flex; flex-wrap: wrap; gap: 8px; }
+.plg_widget_ai .ai-msg .ai-chips button {
+    border: 1px solid var(--ai-border); background: var(--ai-muted); color: var(--ai-fg); border-radius: 999px;
+    padding: 8px 13px; font-size: 13px; cursor: pointer; transition: border-color .15s, background .15s;
+}
+.plg_widget_ai .ai-msg .ai-chips button:hover { border-color: rgba(139, 123, 255, 0.6); background: rgba(139, 123, 255, 0.12); }
+.plg_widget_ai .ai-dots { display: inline-flex; gap: 5px; padding: 6px 0; }
+.plg_widget_ai .ai-dots i { width: 7px; height: 7px; border-radius: 50%; background: var(--ai-gradient); animation: ai-bounce 1s infinite ease-in-out; }
+.plg_widget_ai .ai-dots i:nth-child(2) { animation-delay: .15s; }
+.plg_widget_ai .ai-dots i:nth-child(3) { animation-delay: .3s; }
+@keyframes ai-bounce { 0%, 80%, 100% { opacity: .3; transform: translateY(0); } 40% { opacity: 1; transform: translateY(-4px); } }
+.plg_widget_ai pre { white-space: pre-wrap; word-break: break-all; font-size: 12px; margin: 6px 0 0; color: var(--ai-light); }
+.plg_widget_ai code { font-size: 12.5px; font-family: "SF Mono", ui-monospace, Menlo, Consolas, monospace; color: #c9c2ff; }
+.plg_widget_ai .ai-mem code { white-space: nowrap; }
+.plg_widget_ai .ai-log a { color: #a598ff; word-break: break-all; }
+.plg_widget_ai details { margin-top: 8px; font-size: 12.5px; color: var(--ai-light); }
+.plg_widget_ai details summary { cursor: pointer; }
+.plg_widget_ai .ai-actions, .plg_widget_ai .ai-confirm, .plg_widget_ai .ai-mem {
+    margin-top: 10px; padding: 12px 14px; font-size: 13.5px; border-radius: 16px;
+    background: var(--ai-muted); border: 1px solid var(--ai-border);
+}
+.plg_widget_ai .ai-mem { display: flex; justify-content: space-between; align-items: center; gap: 10px; }
+.plg_widget_ai .ai-draft { border-color: rgba(139, 123, 255, 0.35); background: linear-gradient(180deg, rgba(139, 123, 255, 0.10), rgba(255, 255, 255, 0.03)); }
+.plg_widget_ai blockquote { margin: 8px 0; padding: 10px 12px; border-left: 3px solid #8b7bff; background: rgba(0, 0, 0, 0.25); border-radius: 8px; }
+.plg_widget_ai .ai-msg button {
+    margin: 6px 6px 0 0; padding: 7px 14px; cursor: pointer; font-size: 13px; color: var(--ai-fg);
+    background: rgba(255, 255, 255, 0.06); border: 1px solid var(--ai-border); border-radius: 999px; text-transform: none;
+}
+.plg_widget_ai .ai-msg button[data-yes][data-yes] { background: var(--ai-gradient); border-color: transparent; color: #fff; font-weight: 600; }
+.plg_widget_ai .ai-account-form { display: flex; flex-direction: column; gap: 8px; padding: 10px 0 0; border: none; }
+.plg_widget_ai .ai-account-form input, .plg_widget_ai .ai-account-form select {
+    padding: 10px 12px; border: 1px solid var(--ai-border); border-radius: 12px; background: rgba(0, 0, 0, 0.25); color: inherit; font: inherit;
+}
+.plg_widget_ai .ai-account-form [data-fields] { display: flex; flex-direction: column; gap: 8px; }
+.plg_widget_ai .ai-account-form button { align-self: flex-start; }
+.plg_widget_ai .ai-account-form small { color: var(--ai-light); line-height: 1.45; }
+.plg_widget_ai > section > form { display: flex; align-items: flex-end; gap: 8px; margin: 0 14px 14px; padding: 8px 8px 8px 14px; border: 1px solid var(--ai-border); border-radius: 22px; background: rgba(0, 0, 0, 0.3); transition: border-color .2s, box-shadow .2s; }
+.plg_widget_ai > section > form:focus-within { border-color: rgba(139, 123, 255, 0.6); box-shadow: 0 0 0 4px rgba(139, 123, 255, 0.15); }
+.plg_widget_ai > section > form textarea { flex: 1; resize: none; border: none; outline: none; padding: 7px 0; font: inherit; font-size: 14.5px; background: transparent; color: inherit; max-height: 160px; }
+.plg_widget_ai > section > form textarea::placeholder { color: #6b7385; }
+.plg_widget_ai > section > form button { flex: none; display: grid; place-items: center; width: 36px; height: 36px; border: none; border-radius: 50%; background: var(--ai-gradient); color: #fff; cursor: pointer; }
 `;

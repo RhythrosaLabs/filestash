@@ -40,13 +40,18 @@ import (
 	_ "github.com/mickael-kerjean/filestash/server/plugin/plg_image_c"
 	_ "github.com/mickael-kerjean/filestash/server/plugin/plg_license"
 	_ "github.com/mickael-kerjean/filestash/server/plugin/plg_metadata_sqlite"
+	_ "github.com/mickael-kerjean/filestash/server/plugin/plg_search_sqlitefts"
 	_ "github.com/mickael-kerjean/filestash/server/plugin/plg_search_stateless"
 	_ "github.com/mickael-kerjean/filestash/server/plugin/plg_security_scanner"
 	_ "github.com/mickael-kerjean/filestash/server/plugin/plg_security_svg"
 	_ "github.com/mickael-kerjean/filestash/server/plugin/plg_starter_http"
+	_ "github.com/mickael-kerjean/filestash/server/plugin/plg_theme_sensorium"
+	_ "github.com/mickael-kerjean/filestash/server/plugin/plg_video_thumbnail"
 	_ "github.com/mickael-kerjean/filestash/server/plugin/plg_video_transcoder"
 	_ "github.com/mickael-kerjean/filestash/server/plugin/plg_widget_ai"
 	_ "github.com/mickael-kerjean/filestash/server/plugin/plg_widget_console"
+	_ "github.com/mickael-kerjean/filestash/server/plugin/plg_widget_favourite"
+	_ "github.com/mickael-kerjean/filestash/server/plugin/plg_widget_recent"
 )
 
 func init() {

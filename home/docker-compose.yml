@@ -1,12 +1,12 @@
-# One command: ./start.sh (mac/linux) or .\start.ps1 (windows)
+# Sensorium. One command: ./start.sh (mac/linux) or .\start.ps1 (windows)
 # or by hand: docker compose --profile ollama up -d --build
 services:
-  filestash:
+  sensorium:
     build:
       context: ..
       dockerfile: home/Dockerfile
-    image: filestash-home:latest
-    container_name: filestash
+    image: sensorium:latest
+    container_name: sensorium
     restart: unless-stopped
     ports:
       - "8334:8334"
@@ -18,14 +18,14 @@ services:
     extra_hosts:
       - "host.docker.internal:host-gateway"
     volumes:
-      - filestash_state:/app/data/state
+      - sensorium_state:/app/data/state
       - ./rclone:/config/rclone
       - ${FILES_DIR:?set FILES_DIR to the folder to browse, start.sh does it for you}:/data/home
 
   # local AI, only started with --profile ollama (start.sh skips it when the Ollama app already runs on your computer)
   ollama:
     image: ollama/ollama:latest
-    container_name: filestash_ollama
+    container_name: sensorium_ollama
     restart: unless-stopped
     profiles: ["ollama"]
     volumes:
@@ -41,5 +41,5 @@ services:
     restart: "no"
 
 volumes:
-  filestash_state: {}
+  sensorium_state: {}
   ollama_models: {}

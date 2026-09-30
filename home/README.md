@@ -12,8 +12,8 @@ chips than inside Docker. The start script detects the app and uses it automatic
 ## 2. Start
 
 ```sh
-git clone -b claude/rclone-backend https://github.com/Rhythrosalabs/filestash.git
-cd filestash/home
+git clone https://github.com/RhythrosaLabs/sensorium.git
+cd sensorium/home
 ./start.sh                                               # Mac / Linux
 powershell -ExecutionPolicy Bypass -File .\start.ps1     # Windows
 ```
@@ -68,6 +68,6 @@ Its agent can then list, read, write, move and delete files as `mcp__filestash__
 ## Stop / troubleshoot
 
 - Stop everything: `./stop.sh` (Windows: `docker compose --profile ollama down`). Your settings and connections are kept.
-- Logs: `docker compose logs -f filestash`
+- Logs: `docker compose logs -f sensorium`
 - Port 8334 already used: change `"8334:8334"` to e.g. `"8400:8334"` in `docker-compose.yml`
 - The assistant says it can't reach the model: `docker compose logs ollama-pull`. The model may still be downloading.
