@@ -24,6 +24,10 @@ func init() {
 		r.HandleFunc("/api/plg_widget_ai/chat", NewMiddlewareChain(chatHandler, mw)).Methods("POST")
 		r.HandleFunc("/api/plg_widget_ai/memory", NewMiddlewareChain(listMemoryHandler, mw)).Methods("GET")
 		r.HandleFunc("/api/plg_widget_ai/memory", NewMiddlewareChain(deleteMemoryHandler, mw)).Methods("DELETE")
+		r.HandleFunc("/api/plg_widget_ai/agent_connect", NewMiddlewareChain(agentConnectHandler, mw)).Methods("GET")
+		r.HandleFunc(WithBase("/plg_widget_ai/ai.js"), func(res http.ResponseWriter, req *http.Request) {
+			http.Redirect(res, req, WithBase("/assets/"+BUILD_REF+"/plugin/plg_widget_ai.js"), http.StatusSeeOther)
+		}).Methods("GET")
 		r.HandleFunc(WithBase("/assets/"+BUILD_REF+"/plugin/plg_widget_ai.js"), func(res http.ResponseWriter, req *http.Request) {
 			res.Header().Set("Content-Type", "application/javascript")
 			res.Write(JS)

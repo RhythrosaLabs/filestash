@@ -1,0 +1,45 @@
+# One command: ./start.sh (mac/linux) or .\start.ps1 (windows)
+# or by hand: docker compose --profile ollama up -d --build
+services:
+  filestash:
+    build:
+      context: ..
+      dockerfile: home/Dockerfile
+    image: filestash-home:latest
+    container_name: filestash
+    restart: unless-stopped
+    ports:
+      - "8334:8334"
+    environment:
+      - AI_BASE_URL=${AI_BASE_URL:-http://ollama:11434/v1}
+      - AI_MODEL=${AI_MODEL:-qwen3:8b}
+      - AI_API_KEY=${AI_API_KEY:-}
+      - JEV_API_KEY=${JEV_API_KEY:-}
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    volumes:
+      - filestash_state:/app/data/state
+      - ./rclone:/config/rclone
+      - ${FILES_DIR:?set FILES_DIR to the folder to browse, start.sh does it for you}:/data/home
+
+  # local AI, only started with --profile ollama (start.sh skips it when the Ollama app already runs on your computer)
+  ollama:
+    image: ollama/ollama:latest
+    container_name: filestash_ollama
+    restart: unless-stopped
+    profiles: ["ollama"]
+    volumes:
+      - ollama_models:/root/.ollama
+
+  ollama-pull:
+    image: ollama/ollama:latest
+    profiles: ["ollama"]
+    depends_on: [ollama]
+    environment:
+      - OLLAMA_HOST=ollama:11434
+    entrypoint: ["/bin/sh", "-c", "sleep 3 && ollama pull ${AI_MODEL:-qwen3:8b}"]
+    restart: "no"
+
+volumes:
+  filestash_state: {}
+  ollama_models: {}

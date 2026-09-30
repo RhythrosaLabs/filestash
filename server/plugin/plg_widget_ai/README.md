@@ -77,3 +77,22 @@ at once, create an rclone `combine` remote and connect to it with the rclone bac
 type = combine
 upstreams = icloud=icloud: dropbox=dropbox-personal: dropbox-work=dropbox-work: gdrive=gdrive:
 ```
+
+## Jev (optional)
+
+[TypeSafe Jev](https://typesafe.ai) is a "System One" model. Instead of writing text, it answers typed questions
+(pick one of, score, yes/no) with a confidence, in well under a second and for a fraction of a chat model's price.
+With `jev_api_key` set:
+
+- the assistant gets a `classify_files` tool: "sort my Downloads into Invoices, Photos, Code and Other" classifies
+  every file in parallel and flags uncertain ones (under 60% confidence) before anything is moved
+- `social_inbox` marks each notification with "needs a reply" and an urgency level (can wait, this week, today)
+
+It calls `POST https://api.typesafe.ai/v1/systemone`, following the schema of TypeSafe's published OpenAPI spec.
+
+## External agents (DeepSeek Harness, Hermes Agent, Claude Desktop, …)
+
+🔌 in the assistant gives a token and ready-to-paste configs for Filestash's MCP server (enable it in admin ›
+features › mcp). Besides the original SSE endpoint (`/sse`), there's now a Streamable HTTP endpoint (`/mcp`), which
+is what DeepSeek Harness and other recent MCP clients use. Agents are confined to the folder of the session the
+token was made from.

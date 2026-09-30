@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"io"
 	"net/http"
 	"time"
 
@@ -84,122 +85,7 @@ func (this *Server) sseHandler(_ *App, w http.ResponseWriter, r *http.Request) {
 			}
 			userSession.Backend = b
 
-			switch request.Method {
-			case "initialize":
-				SendMessage(w, request.ID, InitializeResponse{
-					ProtocolVersion: "2024-11-05",
-					ServerInfo: ServerInfo{
-						Name:    "Universal Storage Server",
-						Version: "1.0.0",
-					},
-					Capabilities: Capabilities{
-						Tools:     map[string]interface{}{},
-						Resources: map[string]interface{}{},
-						Prompts:   map[string]interface{}{},
-					},
-				})
-			case "resources/list":
-				SendMessage(w, request.ID, &ResourcesListResponse{
-					Resources: AllResources(),
-				})
-			case "resources/templates/list":
-				SendMessage(w, request.ID, &ResourceTemplatesListResponse{
-					ResourceTemplates: AllResourceTemplates(),
-				})
-			case "resources/read":
-				if uri, ok := request.Params["uri"].(string); ok {
-					if resource, err := FindResource(uri); err != nil {
-						SendError(w, request.ID, JSONRPCError{
-							Code:    http.StatusBadRequest,
-							Message: fmt.Sprintf("Unknown tool: %s", request.Params["name"]),
-						})
-					} else {
-						SendMessage(w, request.ID, &ResourceReadResponse{
-							Contents: []ResourceContent{
-								{
-									URI:      uri,
-									MimeType: resource.MimeType,
-									Text:     resource.Content,
-									Meta:     resource.Meta,
-								},
-							},
-						})
-					}
-				} else {
-					SendError(w, request.ID, JSONRPCError{
-						Code:    http.StatusBadRequest,
-						Message: fmt.Sprintf("Unexpected parameters: %v", request.Params),
-					})
-				}
-				SendMessage(w, request.ID, &ResourceReadResponse{
-					Contents: ExecResourceRead(request.Params),
-				})
-			case "prompts/list":
-				SendMessage(w, request.ID, &PromptsListResponse{
-					Prompts: AllPrompts(),
-				})
-			case "prompts/get":
-				if m, ok := request.Params["name"].(string); ok {
-					res, err := ExecPromptGet(m, request.Params, &userSession)
-					if err == nil {
-						SendMessage(w, request.ID, PromptGetResponse{
-							Messages:    res,
-							Description: ExecPromptDescription(request.Params),
-						})
-					} else {
-						SendError(w, request.ID, err)
-					}
-				} else {
-					SendError(w, request.ID, JSONRPCError{
-						Code:    http.StatusBadRequest,
-						Message: fmt.Sprintf("Unexpected parameters: %v", request.Params),
-					})
-				}
-			case "tools/list":
-				SendMessage(w, request.ID, &ListToolsResponse{
-					Tools: AllTools(),
-				})
-			case "tools/call":
-				if tname, ok := request.Params["name"].(string); ok {
-					if tool, err := FindTool(tname); err != nil {
-						SendError(w, request.ID, JSONRPCError{
-							Code:    http.StatusBadRequest,
-							Message: fmt.Sprintf("Unknown tool: %s", request.Params["name"]),
-						})
-					} else if res, err := tool.Run(request.Params, &userSession); err != nil {
-						SendMessage(w, request.ID, ToolResponse{
-							Content: []TextContent{{"text", err.Error()}},
-							IsError: true,
-						})
-					} else {
-						SendMessage(w, request.ID, res)
-					}
-				} else {
-					SendError(w, request.ID, JSONRPCError{
-						Code:    http.StatusBadRequest,
-						Message: fmt.Sprintf("Unexpected parameters: %v", request.Params),
-					})
-				}
-			case "notifications/initialized":
-				SendMessage(w, request.ID, map[string]string{})
-			case "completion/complete":
-				SendMessage(w, request.ID, CompletionResponse{
-					Completion: ExecCompletion(request.Params, &userSession),
-				})
-			case "ping":
-				SendMessage(w, request.ID, map[string]string{})
-			default:
-				if request.Method == "" && userSession.Ping.ID == request.ID { // response to ping
-					userSession.Ping.LastResponse = time.Now()
-					userSession.Ping.ID += 1
-				} else {
-					Log.Warning("plg_handler_mcp::sse message=unknown_method method=%s requestID=%d", request.Method, request.ID)
-					SendError(w, request.ID, JSONRPCError{
-						Code:    http.StatusMethodNotAllowed,
-						Message: fmt.Sprintf("Unknown request: %s", request.Method),
-					})
-				}
-			}
+			this.dispatch(w, request, &userSession)
 		case <-r.Context().Done():
 			this.RemoveSession(&userSession)
 			return
@@ -235,7 +121,131 @@ func getBackend(token string) (IBackend, error) {
 	if err = json.Unmarshal([]byte(str), &session); err != nil {
 		return nil, err
 	}
-	return NewBackend(&App{
+	b, err := NewBackend(&App{
 		Context: context.Background(),
 	}, session)
+	if err != nil {
+		return nil, err
+	}
+	return withChroot(b, session), nil
+}
+
+// dispatch answers one JSON-RPC request, shared by the SSE and the Streamable HTTP transports
+func (this *Server) dispatch(w io.Writer, request JSONRPCRequest, userSession *UserSession) {
+	switch request.Method {
+	case "initialize":
+		SendMessage(w, request.ID, InitializeResponse{
+			ProtocolVersion: "2024-11-05",
+			ServerInfo: ServerInfo{
+				Name:    "Universal Storage Server",
+				Version: "1.0.0",
+			},
+			Capabilities: Capabilities{
+				Tools:     map[string]interface{}{},
+				Resources: map[string]interface{}{},
+				Prompts:   map[string]interface{}{},
+			},
+		})
+	case "resources/list":
+		SendMessage(w, request.ID, &ResourcesListResponse{
+			Resources: AllResources(),
+		})
+	case "resources/templates/list":
+		SendMessage(w, request.ID, &ResourceTemplatesListResponse{
+			ResourceTemplates: AllResourceTemplates(),
+		})
+	case "resources/read":
+		if uri, ok := request.Params["uri"].(string); ok {
+			if resource, err := FindResource(uri); err != nil {
+				SendError(w, request.ID, JSONRPCError{
+					Code:    http.StatusBadRequest,
+					Message: fmt.Sprintf("Unknown tool: %s", request.Params["name"]),
+				})
+			} else {
+				SendMessage(w, request.ID, &ResourceReadResponse{
+					Contents: []ResourceContent{
+						{
+							URI:      uri,
+							MimeType: resource.MimeType,
+							Text:     resource.Content,
+							Meta:     resource.Meta,
+						},
+					},
+				})
+			}
+		} else {
+			SendError(w, request.ID, JSONRPCError{
+				Code:    http.StatusBadRequest,
+				Message: fmt.Sprintf("Unexpected parameters: %v", request.Params),
+			})
+		}
+		SendMessage(w, request.ID, &ResourceReadResponse{
+			Contents: ExecResourceRead(request.Params),
+		})
+	case "prompts/list":
+		SendMessage(w, request.ID, &PromptsListResponse{
+			Prompts: AllPrompts(),
+		})
+	case "prompts/get":
+		if m, ok := request.Params["name"].(string); ok {
+			res, err := ExecPromptGet(m, request.Params, userSession)
+			if err == nil {
+				SendMessage(w, request.ID, PromptGetResponse{
+					Messages:    res,
+					Description: ExecPromptDescription(request.Params),
+				})
+			} else {
+				SendError(w, request.ID, err)
+			}
+		} else {
+			SendError(w, request.ID, JSONRPCError{
+				Code:    http.StatusBadRequest,
+				Message: fmt.Sprintf("Unexpected parameters: %v", request.Params),
+			})
+		}
+	case "tools/list":
+		SendMessage(w, request.ID, &ListToolsResponse{
+			Tools: AllTools(),
+		})
+	case "tools/call":
+		if tname, ok := request.Params["name"].(string); ok {
+			if tool, err := FindTool(tname); err != nil {
+				SendError(w, request.ID, JSONRPCError{
+					Code:    http.StatusBadRequest,
+					Message: fmt.Sprintf("Unknown tool: %s", request.Params["name"]),
+				})
+			} else if res, err := tool.Run(request.Params, userSession); err != nil {
+				SendMessage(w, request.ID, ToolResponse{
+					Content: []TextContent{{"text", err.Error()}},
+					IsError: true,
+				})
+			} else {
+				SendMessage(w, request.ID, res)
+			}
+		} else {
+			SendError(w, request.ID, JSONRPCError{
+				Code:    http.StatusBadRequest,
+				Message: fmt.Sprintf("Unexpected parameters: %v", request.Params),
+			})
+		}
+	case "notifications/initialized":
+		SendMessage(w, request.ID, map[string]string{})
+	case "completion/complete":
+		SendMessage(w, request.ID, CompletionResponse{
+			Completion: ExecCompletion(request.Params, userSession),
+		})
+	case "ping":
+		SendMessage(w, request.ID, map[string]string{})
+	default:
+		if request.Method == "" && userSession.Ping.ID == request.ID { // response to ping
+			userSession.Ping.LastResponse = time.Now()
+			userSession.Ping.ID += 1
+		} else {
+			Log.Warning("plg_handler_mcp::sse message=unknown_method method=%s requestID=%d", request.Method, request.ID)
+			SendError(w, request.ID, JSONRPCError{
+				Code:    http.StatusMethodNotAllowed,
+				Message: fmt.Sprintf("Unknown request: %s", request.Method),
+			})
+		}
+	}
 }

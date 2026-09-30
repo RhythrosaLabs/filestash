@@ -4,7 +4,7 @@ diff --git a/public/assets/pages/ctrl_filespage.js b/public/assets/pages/ctrl_fi
 @@ -49,2 +49,6 @@ export default WithShell(function(render) {
  
 +    // feature: AI assistant
-+    import("../plugin/plg_widget_ai.js")
++    import(new URL("plg_widget_ai/ai.js", document.baseURI).href)
 +        .then((m) => m.default()).catch((err) => console.log(err));
 +
      // feature6: accessibility / skip links

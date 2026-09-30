@@ -12,6 +12,8 @@ func init() {
 		PluginModel()
 		PluginAPIKey()
 		PluginMaxSteps()
+		PluginJevKey()
+		PluginJevModel()
 	})
 }
 
@@ -29,7 +31,7 @@ func setting(name string, fn func(f *FormElement)) config.ConfigElement {
 var PluginEnable = func() bool {
 	return setting("enable", func(f *FormElement) {
 		f.Type = "enable"
-		f.Target = []string{"ai_base_url", "ai_model", "ai_api_key", "ai_max_steps"}
+		f.Target = []string{"ai_base_url", "ai_model", "ai_api_key", "ai_max_steps", "ai_jev_api_key", "ai_jev_model"}
 		f.Description = "AI assistant that can search, analyse and organise your files"
 		f.Default = false
 	}).Bool()
@@ -70,4 +72,21 @@ var PluginMaxSteps = func() int {
 		f.Description = "Maximum number of tool calls the assistant can chain for a single request"
 		f.Default = 12
 	}).Int()
+}
+
+var PluginJevKey = func() string {
+	return setting("jev_api_key", func(f *FormElement) {
+		f.Id = "ai_jev_api_key"
+		f.Type = "password"
+		f.Description = "Optional TypeSafe Jev API key (https://typesafe.ai). Makes sorting files and triaging notifications fast and cheap"
+	}).String()
+}
+
+var PluginJevModel = func() string {
+	return setting("jev_model", func(f *FormElement) {
+		f.Id = "ai_jev_model"
+		f.Type = "text"
+		f.Default = "jev-latest"
+		f.Placeholder = "jev-latest"
+	}).String()
 }

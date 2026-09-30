@@ -44,6 +44,7 @@ export default function() {
                     <button data-act="accounts" title="Social accounts">🔗</button>
                     <button data-act="queue" title="Scheduled posts and routines">📅</button>
                     <button data-act="memory" title="What I remember">🧠</button>
+                    <button data-act="agent" title="Connect an external agent (DeepSeek Harness, Hermes, Claude…)">🔌</button>
                     <button data-act="clear" title="New conversation">⟲</button>
                     <button data-act="close" title="Close">✕</button>
                 </span>
@@ -191,6 +192,22 @@ export default function() {
         });
     }).catch((err) => add("assistant", "⚠️ " + esc(err.message)));
 
+    const showAgent = () => api("agent_connect").then((c) => {
+        const $m = add("assistant", `<b>Connect an external agent</b><br>
+            Gives an agent like DeepSeek Harness, Hermes Agent or Claude Desktop access to this storage through MCP.
+            The token grants the same access as your session, so keep it private.`);
+        const block = (title, text) => {
+            const $d = document.createElement("div");
+            $d.className = "ai-mem";
+            $d.innerHTML = `<div style="width:100%"><b>${esc(title)}</b> <button>Copy</button><pre>${esc(text)}</pre></div>`;
+            $d.querySelector("button").onclick = (e) => navigator.clipboard.writeText(text).then(() => { e.target.textContent = "Copied"; });
+            $m.appendChild($d);
+        };
+        block("DeepSeek Harness (filestash.cordis.yml)", c.dsh_patch);
+        block("Other MCP clients (Streamable HTTP)", c.generic_config);
+        block("Legacy SSE endpoint", c.sse_url);
+    }).catch((err) => add("assistant", "⚠️ " + esc(err.message)));
+
     const send = (message) => {
         if (busy || !message.trim()) return;
         busy = true;
@@ -226,6 +243,7 @@ export default function() {
         else if (act === "memory") showMemory();
         else if (act === "accounts") showAccounts();
         else if (act === "queue") showQueue();
+        else if (act === "agent") showAgent();
         else if (act === "reload") location.reload();
     });
     $root.querySelector("section > form").onsubmit = (e) => { e.preventDefault(); const v = $input.value; $input.value = ""; send(v); };
@@ -237,8 +255,8 @@ export default function() {
 const CSS = `
 .plg_widget_ai { --ai-bg: #fff; --ai-fg: #373a3c; --ai-muted: #f2f3f5; --ai-accent: #466372; --ai-border: #e2e2e2; }
 @media (prefers-color-scheme: dark) { .plg_widget_ai { --ai-bg: #1f2124; --ai-fg: #e6e6e6; --ai-muted: #2b2e32; --ai-accent: #8fb3c5; --ai-border: #3a3d42; } }
-.plg_widget_ai .ai-fab { position: fixed; right: 20px; bottom: 20px; z-index: 1000; width: 48px; height: 48px; border-radius: 50%; border: none; background: var(--ai-accent); color: #fff; font-size: 20px; cursor: pointer; box-shadow: 0 4px 14px rgba(0,0,0,.25); }
-.plg_widget_ai .ai-panel { position: fixed; right: 20px; bottom: 80px; z-index: 1000; width: min(420px, calc(100vw - 32px)); height: min(600px, calc(100vh - 120px)); display: flex; flex-direction: column; background: var(--ai-bg); color: var(--ai-fg); border: 1px solid var(--ai-border); border-radius: 10px; box-shadow: 0 10px 30px rgba(0,0,0,.25); overflow: hidden; }
+.plg_widget_ai .ai-fab { position: fixed; right: 20px; bottom: 88px; z-index: 1000; width: 48px; height: 48px; border-radius: 50%; border: none; background: var(--ai-accent); color: #fff; font-size: 20px; cursor: pointer; box-shadow: 0 4px 14px rgba(0,0,0,.25); }
+.plg_widget_ai .ai-panel { position: fixed; right: 20px; bottom: 148px; z-index: 1000; width: min(420px, calc(100vw - 32px)); height: min(600px, calc(100vh - 180px)); display: flex; flex-direction: column; background: var(--ai-bg); color: var(--ai-fg); border: 1px solid var(--ai-border); border-radius: 10px; box-shadow: 0 10px 30px rgba(0,0,0,.25); overflow: hidden; }
 .plg_widget_ai .ai-panel.hidden { display: none; }
 .plg_widget_ai header { display: flex; justify-content: space-between; align-items: center; padding: 10px 12px; border-bottom: 1px solid var(--ai-border); }
 .plg_widget_ai header button { background: none; border: none; color: inherit; cursor: pointer; font-size: 15px; padding: 2px 6px; }
@@ -246,12 +264,13 @@ const CSS = `
 .plg_widget_ai .ai-msg { margin: 0 0 10px; padding: 8px 10px; border-radius: 8px; background: var(--ai-muted); word-wrap: break-word; }
 .plg_widget_ai .ai-msg.user { background: var(--ai-accent); color: #fff; margin-left: 40px; }
 .plg_widget_ai .ai-msg.thinking { opacity: .6; font-style: italic; }
-.plg_widget_ai pre { white-space: pre-wrap; font-size: 12px; margin: 6px 0 0; }
+.plg_widget_ai pre { white-space: pre-wrap; word-break: break-all; font-size: 12px; margin: 6px 0 0; }
 .plg_widget_ai code { font-size: 12px; }
 .plg_widget_ai .ai-log a { color: var(--ai-accent); word-break: break-all; }
 .plg_widget_ai details { margin-top: 6px; font-size: 12px; opacity: .8; }
 .plg_widget_ai .ai-actions, .plg_widget_ai .ai-confirm, .plg_widget_ai .ai-mem { margin-top: 8px; padding-top: 6px; border-top: 1px dashed var(--ai-border); font-size: 13px; }
-.plg_widget_ai .ai-msg button { margin-top: 4px; cursor: pointer; }
+.plg_widget_ai .ai-msg button { margin: 4px 4px 0 0; padding: 4px 10px; cursor: pointer; font: inherit; font-size: 13px; color: var(--ai-fg); background: var(--ai-bg); border: 1px solid var(--ai-border); border-radius: 5px; text-transform: none; }
+.plg_widget_ai .ai-msg button[data-yes] { background: var(--ai-accent); border-color: var(--ai-accent); color: #fff; }
 .plg_widget_ai blockquote { margin: 6px 0; padding: 6px 8px; border-left: 3px solid var(--ai-accent); background: var(--ai-bg); border-radius: 4px; }
 .plg_widget_ai .ai-account-form { display: flex; flex-direction: column; gap: 6px; padding: 8px 0 0; border: none; }
 .plg_widget_ai .ai-account-form input, .plg_widget_ai .ai-account-form select { padding: 6px; border: 1px solid var(--ai-border); border-radius: 6px; background: var(--ai-bg); color: inherit; font: inherit; }

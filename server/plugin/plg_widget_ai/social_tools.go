@@ -112,7 +112,7 @@ func formatTime(unix int64) string {
 	return time.Unix(unix, 0).Format("Mon 2006-01-02 15:04")
 }
 
-var socialTools = map[string]socialTool{
+var extraTools = map[string]socialTool{
 	"social_accounts": func(sess *Session, args map[string]any) (string, error) {
 		accounts := listAccounts(sess.user)
 		if len(accounts) == 0 {
@@ -236,8 +236,9 @@ var socialTools = map[string]socialTool{
 			} else if len(items) == 0 {
 				b.WriteString("nothing new\n")
 			}
-			for _, it := range items {
-				fmt.Fprintf(&b, "- %s %s from %s: %s %s\n", it.Time.Local().Format("01-02 15:04"), it.Kind, it.From, truncate(strings.ReplaceAll(it.Text, "\n", " "), 200), it.URL)
+			notes := triageInbox(ctx, items)
+			for i, it := range items {
+				fmt.Fprintf(&b, "- %s %s from %s: %s %s%s\n", it.Time.Local().Format("01-02 15:04"), it.Kind, it.From, truncate(strings.ReplaceAll(it.Text, "\n", " "), 200), it.URL, notes[i])
 			}
 		}
 		return b.String(), nil

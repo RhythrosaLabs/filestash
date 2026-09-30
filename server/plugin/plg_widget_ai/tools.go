@@ -138,7 +138,7 @@ func (this *Session) call(name string, rawArgs string) (out string) {
 			out = "forgotten"
 		}
 	default:
-		if fn, ok := socialTools[name]; ok {
+		if fn, ok := extraTools[name]; ok {
 			out, err = fn(this, args)
 			break
 		}
