@@ -37,6 +37,13 @@ The browser opens http://localhost:8334:
 2. Go to http://localhost:8334/login and pick **This computer**. Log in with that password. You see your home folder.
 3. Click **✦** at the bottom right, or press `ctrl+k`, to talk to the assistant.
 
+## In Visual Studio Code
+
+1. **File › Open Folder…** and choose the `sensorium` folder. Accept the recommended extensions if asked.
+2. Press **Ctrl+Shift+B** (Mac: **Cmd+Shift+B**). That runs **Sensorium: Start** in the terminal panel.
+3. Other actions are under **Terminal › Run Task…**: *Stop*, *Logs*, *Add cloud accounts (rclone)*, *Open in browser*,
+   *Settings (.env)*.
+
 ## 3. Connect your other stuff
 
 | What | How |
