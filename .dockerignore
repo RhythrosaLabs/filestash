@@ -1,0 +1,4 @@
+home/.env
+home/rclone/
+dist/
+**/node_modules/

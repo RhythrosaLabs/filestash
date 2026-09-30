@@ -1,0 +1,59 @@
+{
+    // Sensorium tasks. Run with Terminal > Run Task… (Start is also Ctrl/Cmd+Shift+B)
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "Sensorium: Start",
+            "detail": "Build and start Sensorium in Docker, then open http://localhost:8334",
+            "type": "shell",
+            "command": "./start.sh",
+            "windows": { "command": "powershell -ExecutionPolicy Bypass -File .\\start.ps1" },
+            "options": { "cwd": "${workspaceFolder}/home" },
+            "group": { "kind": "build", "isDefault": true },
+            "presentation": { "reveal": "always", "panel": "dedicated", "clear": true },
+            "problemMatcher": []
+        },
+        {
+            "label": "Sensorium: Stop",
+            "detail": "Stop Sensorium (your files, settings and accounts are kept)",
+            "type": "shell",
+            "command": "docker compose --profile ollama down",
+            "options": { "cwd": "${workspaceFolder}/home" },
+            "problemMatcher": []
+        },
+        {
+            "label": "Sensorium: Logs",
+            "detail": "Follow Sensorium's logs",
+            "type": "shell",
+            "command": "docker compose logs -f --tail 200 sensorium",
+            "options": { "cwd": "${workspaceFolder}/home" },
+            "presentation": { "panel": "dedicated" },
+            "isBackground": true,
+            "problemMatcher": []
+        },
+        {
+            "label": "Sensorium: Add cloud accounts (rclone)",
+            "detail": "iCloud Drive, Dropbox, Google Drive, OneDrive… (Sensorium must be running)",
+            "type": "shell",
+            "command": "docker compose exec -it sensorium rclone config",
+            "options": { "cwd": "${workspaceFolder}/home" },
+            "presentation": { "focus": true, "panel": "dedicated" },
+            "problemMatcher": []
+        },
+        {
+            "label": "Sensorium: Open in browser",
+            "type": "shell",
+            "command": "open http://localhost:8334 || xdg-open http://localhost:8334",
+            "windows": { "command": "start http://localhost:8334" },
+            "problemMatcher": []
+        },
+        {
+            "label": "Sensorium: Settings (.env)",
+            "detail": "Folder shown as This computer, AI model, API keys",
+            "type": "shell",
+            "command": "code home/.env",
+            "options": { "cwd": "${workspaceFolder}" },
+            "problemMatcher": []
+        }
+    ]
+}

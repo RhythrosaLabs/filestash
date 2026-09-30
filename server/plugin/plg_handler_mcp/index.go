@@ -28,6 +28,7 @@ func init() {
 		m := []Middleware{WithCORS}
 		r.HandleFunc("/sse", NewMiddlewareChain(srv.sseHandler, m)).Methods("GET", "OPTIONS")
 		r.HandleFunc("/messages", NewMiddlewareChain(srv.messageHandler, m)).Methods("POST", "OPTIONS")
+		r.HandleFunc("/mcp", NewMiddlewareChain(srv.streamableHandler, m)).Methods("POST", "GET", "DELETE", "OPTIONS")
 		r.HandleFunc("/.well-known/oauth-authorization-server", NewMiddlewareChain(srv.WellKnownOAuthAuthorizationServerHandler, m)).Methods("GET", "OPTIONS")
 		r.HandleFunc("/.well-known/oauth-protected-resource", NewMiddlewareChain(srv.WellKnownOAuthProtectedResourceHandler, m)).Methods("GET", "OPTIONS")
 		r.HandleFunc("/.well-known/oauth-protected-resource/sse", NewMiddlewareChain(srv.WellKnownOAuthProtectedResourceHandler, m)).Methods("GET", "OPTIONS")

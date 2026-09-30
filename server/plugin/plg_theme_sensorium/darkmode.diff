@@ -1,0 +1,13 @@
+diff --git a/public/assets/boot/ctrl_boot_frontoffice.js b/public/assets/boot/ctrl_boot_frontoffice.js
+--- a/public/assets/boot/ctrl_boot_frontoffice.js
++++ b/public/assets/boot/ctrl_boot_frontoffice.js
+@@ -44,8 +44,3 @@ async function setup_device() {
+     document.body.classList.add(className);
+-    if (window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches) {
+-        document.body.classList.add("dark-mode");
+-    }
+-    window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").addEventListener("change", function(e) {
+-        e.matches ? document.body.classList.add("dark-mode") : document.body.classList.remove("dark-mode");
+-    });
++    document.body.classList.add("dark-mode"); // Sensorium theme: always dark
+ }
