@@ -39,6 +39,23 @@ No subscription and no cloud middleman. Your files never leave your machine unle
   <img src="docs/screenshots/hello.png" alt="Sensorium with the assistant open" width="100%">
 </p>
 
+## 🎬 See it in action
+
+<table>
+  <tr>
+    <td width="50%"><img src="docs/walkthroughs/tour.gif" alt="Signing in and browsing"><br><sub><b>Sign in &amp; browse</b>: one password, then your whole library.</sub></td>
+    <td width="50%"><img src="docs/walkthroughs/tidy.gif" alt="The assistant tidying Downloads"><br><sub><b>"Clean up my Downloads"</b>: files sorted, duplicate caught, deleted only on your click.</sub></td>
+  </tr>
+  <tr>
+    <td width="50%"><img src="docs/walkthroughs/social.gif" alt="Creating a posting routine and publishing a draft"><br><sub><b>Social autopilot</b>: a weekly routine, a draft, one click to publish.</sub></td>
+    <td width="50%"><img src="docs/walkthroughs/inbox.gif" alt="Asking what's new on social accounts"><br><sub><b>One inbox</b>: replies, mentions and DMs in one answer.</sub></td>
+  </tr>
+</table>
+
+<sub>Recorded live in the app on a demo library. The assistant's replies come from a scripted demo model; the actions
+(sign-in, moves, the duplicate check, the delete, the routine, publishing through the Bluesky API) were really performed
+by Sensorium.</sub>
+
 ## ✦ What it does
 
 | | |
