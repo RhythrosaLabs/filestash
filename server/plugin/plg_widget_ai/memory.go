@@ -24,7 +24,9 @@ func init() {
 		}
 		if err = initSchema(db); err != nil {
 			Log.Error("plg_widget_ai::db err=cannot_init msg=%s", err.Error())
+			return
 		}
+		startSocial()
 	})
 }
 

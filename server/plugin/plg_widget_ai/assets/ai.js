@@ -41,6 +41,8 @@ export default function() {
             <header>
                 <strong>Assistant</strong>
                 <span>
+                    <button data-act="accounts" title="Social accounts">🔗</button>
+                    <button data-act="queue" title="Scheduled posts and routines">📅</button>
                     <button data-act="memory" title="What I remember">🧠</button>
                     <button data-act="clear" title="New conversation">⟲</button>
                     <button data-act="close" title="Close">✕</button>
@@ -48,7 +50,7 @@ export default function() {
             </header>
             <div class="ai-log" aria-live="polite"></div>
             <form>
-                <textarea rows="2" placeholder="Ask about your files, eg: find duplicates here, sort my downloads by type…"></textarea>
+                <textarea rows="2" placeholder="Ask about your files or socials…"></textarea>
                 <button type="submit">Send</button>
             </form>
         </section>`;
@@ -90,6 +92,7 @@ export default function() {
                 + `<br><button data-act="reload">Refresh view</button>`;
             $m.appendChild($a);
         }
+        (res.drafts || []).forEach((d) => $m.appendChild(renderDraft(d)));
         (res.pending || []).forEach((p) => {
             const $c = document.createElement("div");
             $c.className = "ai-confirm";
@@ -101,6 +104,92 @@ export default function() {
             $m.appendChild($c);
         });
     };
+
+    const when = (unix) => unix ? new Date(unix * 1000).toLocaleString() : "now";
+    const renderDraft = (d) => {
+        const $c = document.createElement("div");
+        $c.className = "ai-confirm ai-draft";
+        const media = (d.media || []).length ? `<br>📎 ${d.media.length} attachment(s)` : "";
+        $c.innerHTML = `<b>${esc(d.account)}</b> · ${d.scheduled_at ? "scheduled " + esc(when(d.scheduled_at)) : "publish on approval"}
+            <blockquote>${fmt(d.text)}</blockquote>${media}
+            <div><button data-yes>${d.scheduled_at ? "Approve" : "Publish"}</button> <button data-no>Discard</button></div>`;
+        $c.querySelector("[data-yes]").onclick = (e) => {
+            e.target.disabled = true;
+            e.target.textContent = "…";
+            api("social/posts/approve?id=" + d.id, { method: "POST" })
+                .then((p) => { $c.innerHTML = p.url ? `✔ published: <a href="${esc(p.url)}" target="_blank" rel="noopener">${esc(p.url)}</a>` : `✔ scheduled for ${esc(when(p.scheduled_at))}`; })
+                .catch((err) => { $c.innerHTML = `⚠️ ${esc(err.message)}`; });
+        };
+        $c.querySelector("[data-no]").onclick = () => api("social/posts?id=" + d.id, { method: "DELETE" })
+            .then(() => { $c.innerHTML = "discarded"; })
+            .catch((err) => { $c.innerHTML = `⚠️ ${esc(err.message)}`; });
+        return $c;
+    };
+
+    const LABELS = {
+        handle: "Handle, eg: you.bsky.social", app_password: "App password (Settings › Privacy › App passwords)", service: "PDS url (optional)",
+        instance: "Instance, eg: mastodon.social", access_token: "Access token",
+        account_id: "Instagram business account id", graph_url: "Graph API url (optional)",
+    };
+    const showAccounts = () => api("social/accounts").then(({ accounts, providers }) => {
+        const $m = add("assistant", "<b>Social accounts</b>");
+        accounts.forEach((a) => {
+            const $row = document.createElement("div");
+            $row.className = "ai-mem";
+            $row.innerHTML = `<span>#${a.id} ${esc(a.provider)} ${esc(a.name)}</span> <button title="Disconnect">✕</button>`;
+            $row.querySelector("button").onclick = () => confirm(`Disconnect ${a.name}? Its routines are removed too.`) &&
+                api("social/accounts?id=" + a.id, { method: "DELETE" }).then(() => $row.remove());
+            $m.appendChild($row);
+        });
+        const $form = document.createElement("form");
+        $form.className = "ai-account-form";
+        $form.innerHTML = `<select>${Object.keys(providers).sort().map((p) => `<option>${p}</option>`).join("")}</select><div data-fields></div><button type="submit">Connect</button>`;
+        const $fields = $form.querySelector("[data-fields]");
+        const renderFields = () => {
+            $fields.innerHTML = providers[$form.querySelector("select").value].map((f) =>
+                `<input name="${f}" type="${/password|token/.test(f) ? "password" : "text"}" placeholder="${esc(LABELS[f] || f)}" autocomplete="off">`).join("");
+        };
+        $form.querySelector("select").onchange = renderFields;
+        renderFields();
+        $form.onsubmit = (e) => {
+            e.preventDefault();
+            const creds = {};
+            $fields.querySelectorAll("input").forEach(($i) => { creds[$i.name] = $i.value; });
+            api("social/accounts", { method: "POST", body: JSON.stringify({ provider: $form.querySelector("select").value, creds }) })
+                .then((a) => { $form.replaceWith(Object.assign(document.createElement("div"), { innerHTML: `✔ connected ${esc(a.name)}` })); })
+                .catch((err) => alert(err.message));
+        };
+        $m.appendChild($form);
+    }).catch((err) => add("assistant", "⚠️ " + esc(err.message)));
+
+    const showQueue = () => api("social/queue").then(({ posts, routines }) => {
+        const $m = add("assistant", posts.length || routines.length ? "" : "No posts or routines yet. Try: <i>every Monday at 6pm post the next photo of /Art to instagram</i>");
+        routines.forEach((r) => {
+            const $row = document.createElement("div");
+            $row.className = "ai-mem";
+            $row.innerHTML = `<span>🔁 #${r.id} ${esc(r.folder)} → ${esc(r.account)} <code>${esc(r.cron)}</code>${r.review ? " (review)" : ""}</span> <button title="Delete">✕</button>`;
+            $row.querySelector("button").onclick = () => api("social/routines?id=" + r.id, { method: "DELETE" }).then(() => $row.remove());
+            $m.appendChild($row);
+        });
+        posts.forEach((p) => {
+            if (p.status === "draft") return $m.appendChild(renderDraft(p));
+            const $row = document.createElement("div");
+            $row.className = "ai-mem";
+            const icon = { scheduled: "🕒", posting: "⏳", posted: "✔", failed: "⚠️" }[p.status] || "";
+            $row.innerHTML = `<span>${icon} #${p.id} ${esc(p.account)} · ${esc(when(p.scheduled_at))}: ${esc(p.text.slice(0, 80))}
+                ${p.url ? `<a href="${esc(p.url)}" target="_blank" rel="noopener">open</a>` : ""}${p.error ? `<br><small>${esc(p.error)}</small>` : ""}</span>`;
+            if (p.status === "scheduled" || p.status === "failed") {
+                const $b = document.createElement("button");
+                $b.textContent = p.status === "failed" ? "Retry" : "Cancel";
+                $b.onclick = () => (p.status === "failed"
+                    ? api("social/posts/retry?id=" + p.id, { method: "POST" })
+                    : api("social/posts?id=" + p.id, { method: "DELETE" }))
+                    .then(() => $row.remove()).catch((err) => alert(err.message));
+                $row.appendChild($b);
+            }
+            $m.appendChild($row);
+        });
+    }).catch((err) => add("assistant", "⚠️ " + esc(err.message)));
 
     const send = (message) => {
         if (busy || !message.trim()) return;
@@ -135,10 +224,12 @@ export default function() {
         if (act === "close") toggle(false);
         else if (act === "clear") { history = []; save(history); renderHistory(); }
         else if (act === "memory") showMemory();
+        else if (act === "accounts") showAccounts();
+        else if (act === "queue") showQueue();
         else if (act === "reload") location.reload();
     });
-    $root.querySelector("form").onsubmit = (e) => { e.preventDefault(); const v = $input.value; $input.value = ""; send(v); };
-    $input.onkeydown = (e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); $root.querySelector("form").requestSubmit(); } };
+    $root.querySelector("section > form").onsubmit = (e) => { e.preventDefault(); const v = $input.value; $input.value = ""; send(v); };
+    $input.onkeydown = (e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); $root.querySelector("section > form").requestSubmit(); } };
     window.addEventListener("keydown", (e) => { if (e.key === "k" && (e.ctrlKey || e.metaKey)) { e.preventDefault(); toggle(); } });
     renderHistory();
 }
@@ -157,10 +248,16 @@ const CSS = `
 .plg_widget_ai .ai-msg.thinking { opacity: .6; font-style: italic; }
 .plg_widget_ai pre { white-space: pre-wrap; font-size: 12px; margin: 6px 0 0; }
 .plg_widget_ai code { font-size: 12px; }
+.plg_widget_ai .ai-log a { color: var(--ai-accent); word-break: break-all; }
 .plg_widget_ai details { margin-top: 6px; font-size: 12px; opacity: .8; }
 .plg_widget_ai .ai-actions, .plg_widget_ai .ai-confirm, .plg_widget_ai .ai-mem { margin-top: 8px; padding-top: 6px; border-top: 1px dashed var(--ai-border); font-size: 13px; }
 .plg_widget_ai .ai-msg button { margin-top: 4px; cursor: pointer; }
-.plg_widget_ai form { display: flex; gap: 8px; padding: 10px; border-top: 1px solid var(--ai-border); }
-.plg_widget_ai textarea { flex: 1; resize: none; border: 1px solid var(--ai-border); border-radius: 6px; padding: 6px 8px; font: inherit; background: var(--ai-bg); color: inherit; }
-.plg_widget_ai form button { border: none; border-radius: 6px; padding: 0 14px; background: var(--ai-accent); color: #fff; cursor: pointer; }
+.plg_widget_ai blockquote { margin: 6px 0; padding: 6px 8px; border-left: 3px solid var(--ai-accent); background: var(--ai-bg); border-radius: 4px; }
+.plg_widget_ai .ai-account-form { display: flex; flex-direction: column; gap: 6px; padding: 8px 0 0; border: none; }
+.plg_widget_ai .ai-account-form input, .plg_widget_ai .ai-account-form select { padding: 6px; border: 1px solid var(--ai-border); border-radius: 6px; background: var(--ai-bg); color: inherit; font: inherit; }
+.plg_widget_ai .ai-account-form [data-fields] { display: flex; flex-direction: column; gap: 6px; }
+.plg_widget_ai .ai-account-form button { align-self: flex-start; padding: 6px 14px; }
+.plg_widget_ai > section > form { display: flex; gap: 8px; padding: 10px; border-top: 1px solid var(--ai-border); }
+.plg_widget_ai > section > form textarea { flex: 1; resize: none; border: 1px solid var(--ai-border); border-radius: 6px; padding: 6px 8px; font: inherit; background: var(--ai-bg); color: inherit; }
+.plg_widget_ai > section > form button { border: none; border-radius: 6px; padding: 0 14px; background: var(--ai-accent); color: #fff; cursor: pointer; }
 `;

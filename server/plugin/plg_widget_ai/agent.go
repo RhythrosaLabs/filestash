@@ -14,9 +14,10 @@ You help the user find, understand, analyse and organise their files by calling 
 - Move and rename are done right away, so only do it when asked or when it is the obvious next step of the request. Double check the destination.
 - Deletions always go through the delete tool which asks the user for confirmation.
 - When you learn something durable about the user (how they name things, where things belong, their projects, their preferences) save it with the remember tool. Don't save transient things.
+- Social media: posts you create are drafts, the user approves them with a click. Use social_inbox to report notifications and messages. For recurring posts built from files, use create_routine.
 - Be concise. When you did something, list what changed.
 
-Current date: %s
+Current time: %s
 Current directory: %s
 %s`
 
@@ -30,11 +31,18 @@ type Response struct {
 	Reply   string   `json:"reply"`
 	Actions []Action `json:"actions"`
 	Pending []Action `json:"pending"`
+	Drafts  []Post   `json:"drafts"`
 	Steps   []string `json:"steps"`
 }
 
 func buildContext(user string) string {
 	var b strings.Builder
+	if accounts := listAccounts(user); len(accounts) > 0 {
+		b.WriteString("\nConnected social accounts:\n")
+		for _, a := range accounts {
+			fmt.Fprintf(&b, "- #%d %s %s\n", a.ID, a.Provider, a.Name)
+		}
+	}
 	if mems := memories(user); len(mems) > 0 {
 		b.WriteString("\nWhat you remember about the user:\n")
 		for _, m := range mems {
@@ -53,7 +61,7 @@ func buildContext(user string) string {
 func runAgent(ctx context.Context, llm LLM, sess *Session, req Request, maxSteps int) (Response, error) {
 	messages := []Message{{
 		Role:    "system",
-		Content: fmt.Sprintf(systemPrompt, time.Now().Format("2006-01-02"), sess.cwd, buildContext(sess.user)),
+		Content: fmt.Sprintf(systemPrompt, time.Now().Format("Monday 2006-01-02 15:04 MST"), sess.cwd, buildContext(sess.user)),
 	}}
 	history := req.History
 	if len(history) > 20 {
@@ -66,7 +74,7 @@ func runAgent(ctx context.Context, llm LLM, sess *Session, req Request, maxSteps
 	}
 	messages = append(messages, Message{Role: "user", Content: req.Message})
 
-	res := Response{Actions: []Action{}, Pending: []Action{}, Steps: []string{}}
+	res := Response{Actions: []Action{}, Pending: []Action{}, Drafts: []Post{}, Steps: []string{}}
 	if maxSteps <= 0 {
 		maxSteps = 12
 	}
@@ -91,6 +99,9 @@ func runAgent(ctx context.Context, llm LLM, sess *Session, req Request, maxSteps
 		}
 	}
 	res.Actions, res.Pending = sess.Actions, sess.Pending
+	if sess.Drafts != nil {
+		res.Drafts = sess.Drafts
+	}
 	if res.Reply == "" {
 		res.Reply = "Done."
 	}

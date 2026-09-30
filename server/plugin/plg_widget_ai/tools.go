@@ -32,8 +32,10 @@ type Session struct {
 	ctx     *App
 	user    string
 	cwd     string
+	token   string   // encrypted storage session, lets routines access files later
 	Actions []Action `json:"actions"`
 	Pending []Action `json:"pending"`
+	Drafts  []Post   `json:"drafts"`
 }
 
 type Action struct {
@@ -136,6 +138,10 @@ func (this *Session) call(name string, rawArgs string) (out string) {
 			out = "forgotten"
 		}
 	default:
+		if fn, ok := socialTools[name]; ok {
+			out, err = fn(this, args)
+			break
+		}
 		return "error: unknown tool " + name
 	}
 	if err != nil {
@@ -213,6 +219,31 @@ func (this *Session) listDir(p string) (string, error) {
 		}
 	}
 	return b.String(), nil
+}
+
+func (this *Session) readBytes(p string, limit int64) ([]byte, error) {
+	if !permissions.CanRead(this.ctx) {
+		return nil, ErrPermissionDenied
+	}
+	_, full, err := this.resolve(p, false)
+	if err != nil {
+		return nil, err
+	}
+	if err = this.authorise("cat", full); err != nil {
+		return nil, err
+	}
+	r, err := this.ctx.Backend.Cat(full)
+	if err != nil {
+		return nil, err
+	}
+	defer r.Close()
+	b, err := io.ReadAll(io.LimitReader(r, limit+1))
+	if err != nil {
+		return nil, err
+	} else if int64(len(b)) > limit {
+		return nil, NewError(fmt.Sprintf("%s is too large (max %s)", p, humanSize(limit)), 400)
+	}
+	return b, nil
 }
 
 func (this *Session) readFile(p string) (string, error) {

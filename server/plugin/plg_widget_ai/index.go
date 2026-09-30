@@ -20,7 +20,7 @@ var PATCH []byte
 
 func init() {
 	Hooks.Register.HttpEndpoint(func(r *mux.Router) error {
-		mw := []Middleware{ApiHeaders, SecureHeaders, PluginGuard, SessionStart, LoggedInOnly}
+		mw := []Middleware{ApiHeaders, SecureHeaders, SessionStart, LoggedInOnly, PluginGuard}
 		r.HandleFunc("/api/plg_widget_ai/chat", NewMiddlewareChain(chatHandler, mw)).Methods("POST")
 		r.HandleFunc("/api/plg_widget_ai/memory", NewMiddlewareChain(listMemoryHandler, mw)).Methods("GET")
 		r.HandleFunc("/api/plg_widget_ai/memory", NewMiddlewareChain(deleteMemoryHandler, mw)).Methods("DELETE")
@@ -42,6 +42,9 @@ func init() {
 func PluginGuard(fn HandlerFunc) HandlerFunc {
 	return func(ctx *App, res http.ResponseWriter, req *http.Request) {
 		if !PluginEnable() {
+			SendErrorResult(res, ErrNotAllowed)
+			return
+		} else if ctx.Share.Id != "" { // visitors of a shared link don't get the owner's assistant, memory and social accounts
 			SendErrorResult(res, ErrNotAllowed)
 			return
 		}
@@ -74,6 +77,9 @@ func chatHandler(ctx *App, res http.ResponseWriter, req *http.Request) {
 		return
 	}
 	sess.cwd = cwd
+	if token, err := encrypt(ctx.Session); err == nil {
+		sess.token = token
+	}
 	llm := LLM{BaseURL: PluginBaseURL(), Model: PluginModel(), APIKey: PluginAPIKey()}
 	out, err := runAgent(req.Context(), llm, sess, body, PluginMaxSteps())
 	if err != nil {
