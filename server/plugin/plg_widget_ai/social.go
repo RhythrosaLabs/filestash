@@ -8,6 +8,8 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"os"
+	"path/filepath"
 	"sort"
 	"strconv"
 	"strings"
@@ -88,9 +90,15 @@ func doPublish(ctx context.Context, p Post) (string, error) {
 	}
 	media := []Media{}
 	for i, name := range p.Media {
-		data, err := readMedia(name)
+		info, err := os.Stat(mediaPath(name))
 		if err != nil {
 			return "", NewError("media of the post are missing", 404)
+		}
+		var data []byte
+		if info.Size() <= maxMediaSize {
+			if data, err = readMedia(name); err != nil {
+				return "", NewError("media of the post are missing", 404)
+			}
 		}
 		if account.Provider == "instagram" && isImage(name) && mimeOf(name) != "image/jpeg" {
 			if data, err = toJPEG(data, 8<<20); err != nil { // instagram only accepts jpeg
@@ -103,9 +111,9 @@ func doPublish(ctx context.Context, p Post) (string, error) {
 				db.Exec(`UPDATE social_posts SET media = ? WHERE id = ?`, string(m), p.ID)
 			}
 		}
-		media = append(media, Media{Name: name, Data: data, PublicURL: publicMediaURL(name)})
+		media = append(media, Media{Name: name, Data: data, Path: mediaPath(name), Size: info.Size(), PublicURL: publicMediaURL(name)})
 	}
-	ctx, cancel := context.WithTimeout(ctx, 5*time.Minute)
+	ctx, cancel := context.WithTimeout(ctx, 60*time.Minute) // large video uploads
 	defer cancel()
 	return provider.Post(ctx, account.creds, p.Text, media)
 }
@@ -127,8 +135,16 @@ var openRoutineApp = func(token string) (*App, error) {
 	return app, nil
 }
 
+func isVideo(name string) bool {
+	switch strings.ToLower(filepath.Ext(name)) {
+	case ".mp4", ".mov", ".m4v", ".webm":
+		return true
+	}
+	return false
+}
+
 func isMedia(name string) bool {
-	return isImage(name) || strings.HasSuffix(strings.ToLower(name), ".mp4") || strings.HasSuffix(strings.ToLower(name), ".mov")
+	return isImage(name) || isVideo(name)
 }
 
 func isText(name string) bool {
@@ -173,6 +189,10 @@ func runRoutine(ctx context.Context, r Routine) (string, error) {
 		}
 		if account.Provider == "instagram" && !isMedia(name) {
 			continue
+		} else if account.Provider == "youtube" && !isVideo(name) {
+			continue
+		} else if account.Provider == "bluesky" && isVideo(name) {
+			continue
 		}
 		if !isMedia(name) && !isText(name) {
 			continue
@@ -183,8 +203,13 @@ func runRoutine(ctx context.Context, r Routine) (string, error) {
 	if pick == "" {
 		return "nothing new to post in " + folder, nil
 	}
-	data, err := sess.readBytes(folder+pick, maxMediaSize)
-	if err != nil {
+	var data []byte
+	staged := ""
+	if isVideo(pick) {
+		if staged, err = sess.stageFile(folder + pick); err != nil {
+			return "", err
+		}
+	} else if data, err = sess.readBytes(folder+pick, maxMediaSize); err != nil {
 		return "", err
 	}
 	llm := LLM{BaseURL: PluginBaseURL(), Model: PluginModel(), APIKey: PluginAPIKey()}
@@ -193,11 +218,12 @@ func runRoutine(ctx context.Context, r Routine) (string, error) {
 		return "", err
 	}
 	post := Post{user: r.user, AccountID: account.ID, Text: text, Status: StatusDraft, Source: folder + pick}
-	if isMedia(pick) && (account.Provider != "bluesky" || isImage(pick)) {
-		staged, err := stageMedia(pick, data)
-		if err != nil {
+	if isImage(pick) && account.Provider != "youtube" {
+		if staged, err = stageMedia(pick, data); err != nil {
 			return "", err
 		}
+	}
+	if staged != "" {
 		post.Media = []string{staged}
 	}
 	if !r.Review {
@@ -241,6 +267,9 @@ func writeCaption(ctx context.Context, llm LLM, provider Provider, user, instruc
 			image = jpg
 			b.WriteString("The image is attached.\n")
 		}
+	}
+	if hint, ok := provider.(interface{ CaptionHint() string }); ok {
+		b.WriteString(hint.CaptionHint() + "\n")
 	}
 	b.WriteString("Reply with the post text only: no quotes, no preamble, no explanation.")
 	system := "You are a social media copywriter writing posts on behalf of the user. You write natural, engaging posts in the user's voice."

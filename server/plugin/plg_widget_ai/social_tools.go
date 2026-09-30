@@ -3,7 +3,6 @@ package plg_widget_ai
 import (
 	"context"
 	"fmt"
-	"path/filepath"
 	"strings"
 	"time"
 )
@@ -151,12 +150,7 @@ var extraTools = map[string]socialTool{
 				cleanupMedia(post.Media)
 				return "", fmt.Errorf("%s is not an image or a video", p)
 			}
-			data, err := sess.readBytes(p, maxMediaSize)
-			if err != nil {
-				cleanupMedia(post.Media)
-				return "", err
-			}
-			staged, err := stageMedia(filepath.Base(p), data)
+			staged, err := sess.stageFile(p)
 			if err != nil {
 				cleanupMedia(post.Media)
 				return "", err
@@ -166,6 +160,9 @@ var extraTools = map[string]socialTool{
 		}
 		if account.Provider == "instagram" && len(post.Media) == 0 {
 			return "", fmt.Errorf("Instagram posts need an image or a video")
+		} else if account.Provider == "youtube" && (len(post.Media) != 1 || !isVideo(post.Media[0])) {
+			cleanupMedia(post.Media)
+			return "", fmt.Errorf("YouTube posts need exactly one video (mp4, mov, m4v or webm). The first line of the text is the title, the rest the description")
 		}
 		if post.ID, err = createPost(post); err != nil {
 			cleanupMedia(post.Media)

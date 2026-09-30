@@ -36,7 +36,7 @@ The browser opens http://localhost:8334:
 | Calendar (iCloud, Fastmail, Nextcloud) | Login page › **Calendar**: e.g. `https://caldav.icloud.com` with your Apple ID and an app-specific password |
 | Another computer | Login page › **Other computer (SFTP)**: turn on "Remote Login" (Mac) or OpenSSH server (Windows/Linux) on that computer |
 | Phone | Login page › **Phone (WebDAV)**: any WebDAV server app on the phone |
-| Social accounts | In the assistant, click 🔗 |
+| Social accounts (Bluesky, Mastodon, Instagram, YouTube) | In the assistant, click 🔗. YouTube needs a one-time Google Cloud setup: see [the assistant's README](../server/plugin/plg_widget_ai/README.md#youtube-setup-once-about-10-minutes) |
 
 Tip: in `rclone-config.sh`, a remote of type `combine` merges several clouds into one tree. Connect to that
 one and the assistant can search and de-duplicate across all of them at once.

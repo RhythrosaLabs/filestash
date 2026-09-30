@@ -6,8 +6,10 @@ import (
 	"database/sql"
 	"encoding/hex"
 	"encoding/json"
+	"fmt"
 	"image"
 	"image/jpeg"
+	"io"
 	"os"
 	"path/filepath"
 	"regexp"
@@ -370,9 +372,12 @@ func markRoutineRun(r Routine, usedFile string) {
 
 // ---------------------------------------------------------------- media staging
 
-const maxMediaSize = 50 << 20
+const (
+	maxMediaSize = 50 << 20 // images and anything loaded in memory
+	maxVideoSize = 4 << 30  // videos are streamed from disk
+)
 
-var mediaNameRegex = regexp.MustCompile(`^[0-9a-f]{32}\.(jpg|png|gif|webp|mp4|mov)$`)
+var mediaNameRegex = regexp.MustCompile(`^[0-9a-f]{32}\.(jpg|png|gif|webp|mp4|mov|m4v|webm)$`)
 
 var mediaDir = func() string {
 	dir := GetAbsolutePath(DB_PATH, "ai_social_media")
@@ -381,17 +386,41 @@ var mediaDir = func() string {
 }
 
 func stageMedia(name string, b []byte) (string, error) {
+	return stageReader(name, bytes.NewReader(b), int64(len(b)))
+}
+
+// stageReader copies media in the staging area without holding it in memory
+func stageReader(name string, r io.Reader, limit int64) (string, error) {
 	ext := strings.ToLower(strings.TrimPrefix(filepath.Ext(name), "."))
 	if ext == "jpeg" {
 		ext = "jpg"
 	}
 	if !mediaNameRegex.MatchString(strings.Repeat("0", 32) + "." + ext) {
-		return "", NewError("unsupported media type ."+ext+", use jpg, png, gif, webp, mp4 or mov", 400)
+		return "", NewError("unsupported media type ."+ext+", use jpg, png, gif, webp, mp4, mov, m4v or webm", 400)
 	}
 	rnd := make([]byte, 16)
 	rand.Read(rnd)
 	staged := hex.EncodeToString(rnd) + "." + ext
-	return staged, os.WriteFile(filepath.Join(mediaDir(), staged), b, 0600)
+	f, err := os.OpenFile(mediaPath(staged), os.O_CREATE|os.O_WRONLY|os.O_EXCL, 0600)
+	if err != nil {
+		return "", err
+	}
+	n, err := io.Copy(f, io.LimitReader(r, limit+1))
+	if cerr := f.Close(); err == nil {
+		err = cerr
+	}
+	if err == nil && n > limit {
+		err = NewError(fmt.Sprintf("%s is too large (max %s)", name, humanSize(limit)), 400)
+	}
+	if err != nil {
+		os.Remove(mediaPath(staged))
+		return "", err
+	}
+	return staged, nil
+}
+
+func mediaPath(staged string) string {
+	return filepath.Join(mediaDir(), staged)
 }
 
 func readMedia(staged string) ([]byte, error) {
@@ -431,6 +460,10 @@ func mimeOf(name string) string {
 		return "video/mp4"
 	case ".mov":
 		return "video/quicktime"
+	case ".m4v":
+		return "video/x-m4v"
+	case ".webm":
+		return "video/webm"
 	}
 	return "application/octet-stream"
 }

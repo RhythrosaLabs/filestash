@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"net/http"
+	"os"
 	"strconv"
 	"strings"
 	"time"
@@ -25,6 +26,7 @@ func init() {
 		r.HandleFunc("/api/plg_widget_ai/social/posts/retry", NewMiddlewareChain(retryHandler, mw)).Methods("POST")
 		r.HandleFunc("/api/plg_widget_ai/social/posts", NewMiddlewareChain(cancelPostHandler, mw)).Methods("DELETE")
 		r.HandleFunc("/api/plg_widget_ai/social/routines", NewMiddlewareChain(deleteRoutineHandler, mw)).Methods("DELETE")
+		r.HandleFunc("/api/plg_widget_ai/social/oauth/callback", NewMiddlewareChain(oauthCallbackHandler, mw)).Methods("GET")
 		// public: instagram downloads the media of a post from here. Names are 128 bits random
 		// and only the media of posts that are not published yet are served
 		r.HandleFunc(WithBase("/api/plg_widget_ai/social/media/{name}"), mediaHandler).Methods("GET", "HEAD")
@@ -62,6 +64,16 @@ func addAccountHandler(ctx *App, res http.ResponseWriter, req *http.Request) {
 	creds := map[string]string{}
 	for _, f := range provider.Fields() {
 		creds[f] = strings.TrimSpace(body.Creds[f])
+	}
+	if op, ok := provider.(OAuthProvider); ok { // continue on the provider's sign in page
+		if creds["client_id"] == "" || creds["client_secret"] == "" {
+			SendErrorResult(res, NewError("client_id and client_secret are required", 400))
+			return
+		}
+		redirect := oauthRedirectURL(req)
+		state := newOAuthState(pendingOAuth{user: getUser(ctx.Session), provider: body.Provider, creds: creds, redirect: redirect})
+		SendSuccessResult(res, map[string]string{"auth_url": op.AuthURL(creds, redirect, state), "redirect_uri": redirect})
+		return
 	}
 	c, cancel := context.WithTimeout(req.Context(), 30*time.Second)
 	defer cancel()
@@ -160,16 +172,18 @@ func mediaHandler(res http.ResponseWriter, req *http.Request) {
 		http.NotFound(res, req)
 		return
 	}
-	data, err := readMedia(name)
+	f, err := os.Open(mediaPath(name))
+	if err != nil {
+		http.NotFound(res, req)
+		return
+	}
+	defer f.Close()
+	info, err := f.Stat()
 	if err != nil {
 		http.NotFound(res, req)
 		return
 	}
 	res.Header().Set("Content-Type", mimeOf(name))
-	res.Header().Set("Content-Length", strconv.Itoa(len(data)))
 	res.Header().Set("Cache-Control", "no-store")
-	if req.Method == "HEAD" {
-		return
-	}
-	res.Write(data)
+	http.ServeContent(res, req, name, info.ModTime(), f)
 }

@@ -246,6 +246,30 @@ func (this *Session) readBytes(p string, limit int64) ([]byte, error) {
 	return b, nil
 }
 
+// stageFile copies a file of the storage to the social media staging area, streaming it
+func (this *Session) stageFile(p string) (string, error) {
+	if !permissions.CanRead(this.ctx) {
+		return "", ErrPermissionDenied
+	}
+	_, full, err := this.resolve(p, false)
+	if err != nil {
+		return "", err
+	}
+	if err = this.authorise("cat", full); err != nil {
+		return "", err
+	}
+	r, err := this.ctx.Backend.Cat(full)
+	if err != nil {
+		return "", err
+	}
+	defer r.Close()
+	limit := int64(maxMediaSize)
+	if isVideo(p) {
+		limit = maxVideoSize
+	}
+	return stageReader(filepath.Base(p), r, limit)
+}
+
 func (this *Session) readFile(p string) (string, error) {
 	if !permissions.CanRead(this.ctx) {
 		return "", ErrPermissionDenied

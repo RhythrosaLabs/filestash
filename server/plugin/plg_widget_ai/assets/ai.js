@@ -131,6 +131,15 @@ export default function() {
         handle: "Handle, eg: you.bsky.social", app_password: "App password (Settings › Privacy › App passwords)", service: "PDS url (optional)",
         instance: "Instance, eg: mastodon.social", access_token: "Access token",
         account_id: "Instagram business account id", graph_url: "Graph API url (optional)",
+        client_id: "Google OAuth client ID", client_secret: "Google OAuth client secret", privacy: "Upload as: private (default), unlisted or public",
+    };
+    const HINTS = {
+        youtube: () => `Needs an OAuth client from a Google Cloud project with the YouTube Data API enabled.
+            Add this exact redirect URI to the client: <code>${esc(new URL("api/plg_widget_ai/social/oauth/callback", document.baseURI).href)}</code>.
+            Step by step: see the assistant's README.`,
+        instagram: () => "Instagram downloads images itself: Filestash must be reachable from the internet.",
+        bluesky: () => "Create an app password in Bluesky › Settings › Privacy and security › App passwords.",
+        mastodon: () => "Preferences › Development › New application with read and write scopes, then copy its access token.",
     };
     const showAccounts = () => api("social/accounts").then(({ accounts, providers }) => {
         const $m = add("assistant", "<b>Social accounts</b>");
@@ -147,8 +156,10 @@ export default function() {
         $form.innerHTML = `<select>${Object.keys(providers).sort().map((p) => `<option>${p}</option>`).join("")}</select><div data-fields></div><button type="submit">Connect</button>`;
         const $fields = $form.querySelector("[data-fields]");
         const renderFields = () => {
-            $fields.innerHTML = providers[$form.querySelector("select").value].map((f) =>
-                `<input name="${f}" type="${/password|token/.test(f) ? "password" : "text"}" placeholder="${esc(LABELS[f] || f)}" autocomplete="off">`).join("");
+            const provider = $form.querySelector("select").value;
+            $fields.innerHTML = providers[provider].map((f) =>
+                `<input name="${f}" type="${/password|token|secret/.test(f) ? "password" : "text"}" placeholder="${esc(LABELS[f] || f)}" autocomplete="off">`).join("")
+                + (HINTS[provider] ? `<small>${HINTS[provider]()}</small>` : "");
         };
         $form.querySelector("select").onchange = renderFields;
         renderFields();
@@ -156,9 +167,20 @@ export default function() {
             e.preventDefault();
             const creds = {};
             $fields.querySelectorAll("input").forEach(($i) => { creds[$i.name] = $i.value; });
-            api("social/accounts", { method: "POST", body: JSON.stringify({ provider: $form.querySelector("select").value, creds }) })
-                .then((a) => { $form.replaceWith(Object.assign(document.createElement("div"), { innerHTML: `✔ connected ${esc(a.name)}` })); })
-                .catch((err) => alert(err.message));
+            const provider = $form.querySelector("select").value;
+            // sign in pages must open from the click, before the request, or popup blockers stop them
+            const popup = provider === "youtube" ? window.open("", "_blank") : null;
+            api("social/accounts", { method: "POST", body: JSON.stringify({ provider, creds }) })
+                .then((a) => {
+                    if (a.auth_url) {
+                        if (popup) popup.location.href = a.auth_url;
+                        else window.open(a.auth_url, "_blank");
+                        $form.replaceWith(Object.assign(document.createElement("div"), { innerHTML: `Finish signing in with Google in the new tab. If it says <i>redirect_uri_mismatch</i>, add <code>${esc(a.redirect_uri)}</code> to your OAuth client.` }));
+                        return;
+                    }
+                    $form.replaceWith(Object.assign(document.createElement("div"), { innerHTML: `✔ connected ${esc(a.name)}` }));
+                })
+                .catch((err) => { if (popup) popup.close(); alert(err.message); });
         };
         $m.appendChild($form);
     }).catch((err) => add("assistant", "⚠️ " + esc(err.message)));
@@ -249,6 +271,7 @@ export default function() {
     $root.querySelector("section > form").onsubmit = (e) => { e.preventDefault(); const v = $input.value; $input.value = ""; send(v); };
     $input.onkeydown = (e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); $root.querySelector("section > form").requestSubmit(); } };
     window.addEventListener("keydown", (e) => { if (e.key === "k" && (e.ctrlKey || e.metaKey)) { e.preventDefault(); toggle(); } });
+    window.addEventListener("message", (e) => { if (e.origin === location.origin && e.data === "plg_widget_ai:accounts") showAccounts(); });
     renderHistory();
 }
 
@@ -276,6 +299,7 @@ const CSS = `
 .plg_widget_ai .ai-account-form input, .plg_widget_ai .ai-account-form select { padding: 6px; border: 1px solid var(--ai-border); border-radius: 6px; background: var(--ai-bg); color: inherit; font: inherit; }
 .plg_widget_ai .ai-account-form [data-fields] { display: flex; flex-direction: column; gap: 6px; }
 .plg_widget_ai .ai-account-form button { align-self: flex-start; padding: 6px 14px; }
+.plg_widget_ai .ai-account-form small { opacity: .8; line-height: 1.4; }
 .plg_widget_ai > section > form { display: flex; gap: 8px; padding: 10px; border-top: 1px solid var(--ai-border); }
 .plg_widget_ai > section > form textarea { flex: 1; resize: none; border: 1px solid var(--ai-border); border-radius: 6px; padding: 6px 8px; font: inherit; background: var(--ai-bg); color: inherit; }
 .plg_widget_ai > section > form button { border: none; border-radius: 6px; padding: 0 14px; background: var(--ai-accent); color: #fff; cursor: pointer; }

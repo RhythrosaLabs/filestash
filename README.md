@@ -1,4 +1,4 @@
-> **This fork** adds an AI assistant, email, calendar, rclone clouds (iCloud, multiple Dropbox / Google Drive accounts) and social media.
+> **This fork** adds an AI assistant, email, calendar, rclone clouds (iCloud, multiple Dropbox / Google Drive accounts) and social media (Bluesky, Mastodon, Instagram, YouTube).
 > To run it on your computer, see [`home/README.md`](home/README.md). Plugin docs: [`plg_widget_ai`](server/plugin/plg_widget_ai/README.md), [`plg_backend_rclone`](server/plugin/plg_backend_rclone/README.md).
 
 ![screenshot](https://raw.githubusercontent.com/mickael-kerjean/filestash_images/master/.assets/photo.jpg)

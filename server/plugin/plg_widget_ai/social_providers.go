@@ -27,7 +27,9 @@ type InboxItem struct {
 
 type Media struct {
 	Name      string // staged file name
-	Data      []byte
+	Data      []byte // content, only for files up to maxMediaSize
+	Path      string // file on disk, for providers that stream large videos
+	Size      int64
 	PublicURL string // for providers that fetch media themselves (instagram)
 }
 
@@ -44,6 +46,7 @@ var providers = map[string]Provider{
 	"bluesky":   Bluesky{},
 	"mastodon":  Mastodon{},
 	"instagram": Instagram{},
+	"youtube":   YouTube{},
 }
 
 var socialHTTP = &http.Client{Timeout: 60 * time.Second}
@@ -316,6 +319,9 @@ func (this Mastodon) Post(ctx context.Context, creds map[string]string, text str
 	}
 	ids := []string{}
 	for _, m := range media {
+		if m.Data == nil {
+			return "", NewError(fmt.Sprintf("%s is too large for Mastodon (max %s)", m.Name, humanSize(maxMediaSize)), 400)
+		}
 		var body bytes.Buffer
 		w := multipart.NewWriter(&body)
 		part, _ := w.CreateFormFile("file", m.Name)

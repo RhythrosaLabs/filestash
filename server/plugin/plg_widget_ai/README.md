@@ -44,6 +44,7 @@ They're never sent to the model.
 | Bluesky | handle + an [app password](https://bsky.app/settings/app-passwords). To read DMs, tick "allow access to direct messages". | yes |
 | Mastodon | instance + an access token (Preferences › Development › New application, with scopes `read write`) | yes |
 | Instagram | a Business or Creator account linked to a Facebook page, an access token with `instagram_content_publish` and `instagram_basic`, and the Instagram account id | yes, but Meta's developer setup is involved |
+| YouTube | a Google OAuth client (steps below), then "Sign in with Google" | yes |
 
 **Instagram downloads the images itself**, so Filestash must be reachable from the internet (admin › settings ›
 general › host). A tunnel such as Cloudflare Tunnel or Tailscale Funnel works. Filestash only serves the media of
@@ -51,6 +52,34 @@ posts that haven't been published yet, at random 128-bit URLs. Reading Instagram
 supported. Comments on your recent posts are.
 
 X/Twitter isn't included because its API is paid.
+
+### YouTube setup (once, about 10 minutes)
+
+1. Go to https://console.cloud.google.com and create a project.
+2. **APIs & Services › Library**: search "YouTube Data API v3" and click **Enable**.
+3. **Google Auth Platform › Audience** (called "OAuth consent screen" in older consoles): choose **External**, fill in
+   the app name and your email, and add your Google address as a test user. Then click **Publish app**. While the app
+   is in "Testing" mode, Google signs you out after 7 days. Once published, you get a "Google hasn't verified this
+   app" warning when you sign in; that's expected for a personal app, so click *Advanced › Continue*.
+4. **Credentials › Create credentials › OAuth client ID › Web application**. Under *Authorized redirect URIs* add
+   `http://localhost:8334/api/plg_widget_ai/social/oauth/callback`. The 🔗 form shows the exact address for your
+   setup. Open Filestash as `localhost`, not `127.0.0.1`, so they match.
+5. In the assistant: 🔗 › youtube › paste the client ID and secret › **Connect**, then sign in with Google in the tab
+   that opens.
+
+Then, for example: "upload `/Videos/tour.mp4` to YouTube, title *Studio tour*, write a description". The first line
+of the post is the title, the rest is the description. "What's new on my socials?" includes comments on your 5
+latest videos. Routines work too: "every Friday post the next video of `/Videos/Shorts` to YouTube". Vertical
+videos under 3 minutes become Shorts automatically.
+
+Good to know:
+
+- Uploads are **private** by default. Change *privacy* to `unlisted` or `public` when connecting.
+- YouTube keeps videos uploaded through the API by a new, unaudited Google project **private**, whatever the setting,
+  until the project passes YouTube's API audit (a form in the Google Cloud console). Until then, publish them from
+  YouTube Studio with one click.
+- The free API quota covers a handful of uploads a day.
+- Videos are streamed from disk, up to 4 GB each.
 
 Things to ask:
 
