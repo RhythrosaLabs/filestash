@@ -1,0 +1,218 @@
+import { toHref } from "../lib/skeleton/router.js";
+import { animate, slideYOut, slideYIn, opacityOut } from "../lib/animate.js";
+import { forwardURLParams } from "../lib/path.js";
+import { safe } from "../lib/dom.js";
+import assert from "../lib/assert.js";
+import { settingsSave } from "../lib/store.js";
+import { get as getConfig } from "../model/config.js";
+import { loadCSS } from "../helpers/loader.js";
+
+import { extractPath, isDir, isNativeFileUpload } from "../pages/filespage/helper.js";
+import { mv as mv$ } from "../pages/filespage/model_files.js";
+import { mv as mvVL, withVirtualLayer } from "../pages/filespage/model_virtual_layer.js";
+
+const mv = (from, to) => withVirtualLayer(
+    mv$(from, to),
+    mvVL(from, to),
+);
+
+class ComponentBreadcrumb extends HTMLElement {
+    constructor() {
+        super();
+        if (new URL(location.href).searchParams.get("nav") === "false") {
+            this.disabled = true;
+            return;
+        }
+        this.__init();
+    }
+
+    async __init() {
+        this.innerHTML = `
+        <nav class="component_breadcrumb container" aria-label="Breadcrumb">
+            <div class="breadcrumb no-select">
+                <div class="ul">
+                    <img alt="sidebar-open" class="hidden" src="data:image/svg+xml;base64,PHN2ZwogICB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciCiAgIHZpZXdCb3g9IjAgMCAxNiAxNiIKICAgd2lkdGg9IjE2IgogICBoZWlnaHQ9IjE2IgogICBmaWxsPSIjN2Y3ZjdmIj4KICA8cGF0aAogICAgIGQ9Im0gNi45MjY1NTM2LDguMTc3IC0yLjM5NiwyLjM5NiBhIDAuMjUsMC4yNSAwIDAgMSAtMC40MjcsLTAuMTc3IFYgNS42MDQgYSAwLjI1LDAuMjUgMCAwIDEgMC40MjcsLTAuMTc3IGwgMi4zOTYsMi4zOTYgYSAwLjI1LDAuMjUgMCAwIDEgMCwwLjM1NCB6IiAvPgogIDxwYXRoCiAgICAgZD0iTTAgMS43NUMwIC43ODQuNzg0IDAgMS43NSAwaDEyLjVDMTUuMjE2IDAgMTYgLjc4NCAxNiAxLjc1djEyLjVBMS43NSAxLjc1IDAgMCAxIDE0LjI1IDE2SDEuNzVBMS43NSAxLjc1IDAgMCAxIDAgMTQuMjVabTEuNzUtLjI1YS4yNS4yNSAwIDAgMC0uMjUuMjV2MTIuNWMwIC4xMzguMTEyLjI1LjI1LjI1SDkuNXYtMTNabTEyLjUgMTNhLjI1LjI1IDAgMCAwIC4yNS0uMjVWMS43NWEuMjUuMjUgMCAwIDAtLjI1LS4yNUgxMXYxM1oiIC8+Cjwvc3ZnPgo=">
+                    <span data-bind="path" role="status"></span>
+                    <div class="li component_logout">${this.__htmlLogout()}</div>
+                </div>
+            </div>
+        </nav>`;
+        assert.type(this.querySelector("img[alt=\"sidebar-open\"]"), HTMLElement).onclick = () => {
+            settingsSave({ visible: true }, "sidebar");
+            window.dispatchEvent(new Event("resize"));
+        };
+    }
+
+    attributeChangedCallback(name, oldValue, newValue) {
+        if (this.disabled === true) return;
+        else if (oldValue === newValue) return;
+
+        switch (name) {
+        case "path":
+            if (newValue === "") return;
+            return this.renderPath({ path: newValue, previous: oldValue || null });
+        case "indicator":
+            return this.renderIndicator();
+        }
+        throw new Error("component::breadcrumb.js unknow attribute name: "+ name);
+    }
+
+    static get observedAttributes() {
+        return ["path", "indicator"];
+    }
+
+    async renderPath({ path = "", previous }) {
+        path = this.__normalised(path);
+        previous = this.__normalised(previous);
+        const pathChunks = path.split("/");
+
+        // STEP1: leaving animation on elements that will be removed
+        if (previous !== null && previous.indexOf(path) >= 0) {
+            const previousChunks = previous.split("/");
+            const nToAnimate = previousChunks.length - pathChunks.length;
+            const tasks = [];
+            for (let i=0; i<nToAnimate; i++) {
+                const n = previousChunks.length - i - 1;
+                const $chunk = assert.type(this.querySelector(`.component_path-element.n${n}`), HTMLElement);
+                tasks.push(animate($chunk, { time: 100, keyframes: slideYOut(-10) }));
+            }
+            await Promise.all(tasks);
+        }
+
+        // STEP2: setup the actual content
+        assert.type(this.querySelector(`[data-bind="path"]`), HTMLElement).innerHTML = pathChunks.map((chunk, idx) => {
+            const label = idx === 0 ? getConfig("name", "Filestash") : chunk;
+            const link = pathChunks.slice(0, idx + 1).join("/") + "/";
+            const limitSize = (word, highlight = false) => {
+                if (highlight === true && word.length > 30) {
+                    return word.substring(0, 12).trim() + "..." +
+                        word.substring(word.length - 10, word.length).trim();
+                }
+                else if (word.length > 27) return word.substring(0, 20).trim() + "...";
+                return word;
+            };
+            const isLast = idx === pathChunks.length - 1;
+            if (isLast) return `
+                <div class="component_path-element n${idx}">
+                    <div class="li component_path-element-wrapper">
+                        <div class="label">
+                            <div aria-current="location">${safe(limitSize(label))}</div><span></span>
+                        </div>
+                    </div>
+                </div>`;
+
+            const minify = (() => {
+                if (idx === 0) return false;
+                else if (pathChunks.length <= (document.body.clientWidth > 800 ? 5 : 4)) return false;
+                else if (idx > pathChunks.length - (document.body.clientWidth > 1000 ? 4 : 3)) return false;
+                return true;
+            })();
+
+            const tmpl = (() => {
+                if (minify) return `
+                    ...
+                    <span class="title">
+                        ${safe(limitSize(label, true))}
+                    </span>
+                `;
+                return `<div>${safe(limitSize(label))}</div>`;
+            })();
+            return `
+                <div class="component_path-element n${idx}" data-path="${safe(pathChunks.slice(0, idx+1).join("/")) + "/"}">
+                    <div class="li component_path-element-wrapper">
+                        <a class="label" aria-label="${safe(label)}" href="${forwardURLParams(toHref("/files" + encodeURIComponent(link).replaceAll("%2F", "/")), ["share", "canary"])}" data-link draggable="false">
+                            ${tmpl}
+                        </a>
+                        <div class="component_separator">
+                            <img alt="path_separator" width="16" height="16" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABEAAAARCAYAAAA7bUf6AAAA30lEQVQ4T63T7Q2CMBAG4OuVPdQNcAPdBCYwDdclCAQ3ACfRDXQDZQMHgNRcAoYApfWjv0jIPX3b3gn4wxJjI03TUAhRBkGwV0o9ffaYIEVRrJumuQHA3ReaILxzl+bCkNZ660ozi/QQIl4BoCKieAmyIlyU53lkjCld0CIyhIwxSmt9nEvkRLgoyzIuPggh4iRJqjHkhXTQAwBWUsqNUoq/38sL+TlJf7lf38ngdU5EFNme2adPFgGGrR2LiGcAqIko/LhjeXbatuVOraWUO58hnJ1iRKx8AetxXPHH/1+y62USursaSgAAAABJRU5ErkJggg==">
+                        </div>
+                    </div>
+                </div>`;
+        }).join("");
+        this.setupDragDropTarget();
+
+        // STEP3: entering animation for elements that got added in
+        if (previous !== null && path.indexOf(previous) >= 0) {
+            const previousChunks = previous.split("/");
+            const nToAnimate = pathChunks.length - previousChunks.length;
+            const tasks = [];
+            for (let i=0; i<nToAnimate; i++) {
+                const n = pathChunks.length - i - 1;
+                const $chunk = assert.type(this.querySelector(`.component_path-element.n${n}`), HTMLElement);
+                tasks.push(animate($chunk, { time: 100, keyframes: slideYIn(-5) }));
+            }
+            await Promise.all(tasks);
+        }
+    }
+
+    async renderIndicator() {
+        let state = this.hasAttribute("indicator");
+        if (state && this.getAttribute("indicator") !== "false") state = true;
+
+        let $indicator = assert.type(this.querySelector(`[data-bind="path"]`), HTMLElement);
+        $indicator = assert.type($indicator.lastChild.querySelector("span"), HTMLElement);
+
+        if (state) {
+            $indicator.style.opacity = 1;
+            $indicator.innerHTML = `<div class="component_saving">*</div>`;
+            await animate($indicator, {
+                time: 500,
+                keyframes: [
+                    { transform: "scale(0)", offset: 0 },
+                    { transform: "scale(1.5)", offset: 0.3 },
+                    { transform: "scale(1)", offset: 1 },
+                ],
+                fill: "none"
+            });
+        } else {
+            $indicator.style.opacity = 0;
+            await animate($indicator, { time: 200, keyframes: opacityOut(), fill: "none" });
+        }
+    }
+
+    setupDragDropTarget() {
+        this.querySelectorAll("a.label").forEach(($elmnt) => {
+            const $folder = assert.type($elmnt, HTMLElement);
+            const $path = assert.truthy($folder.closest(".component_path-element"));
+            $folder.ondrop = async(e) => {
+                $path.classList.remove("highlight");
+                const from = e.dataTransfer.getData("path");
+                let to = $path.getAttribute("data-path");
+
+                const [, fromName] = extractPath(from);
+                to += fromName;
+                if (isDir(from)) to += "/";
+                await mv(from, to).toPromise();
+            };
+            $folder.ondragover = (e) => {
+                if (isNativeFileUpload(e)) return;
+                e.preventDefault();
+                $path.classList.add("highlight");
+            };
+            $folder.ondragleave = () => {
+                $path.classList.remove("highlight");
+            };
+        });
+    }
+
+    __htmlLogout() {
+        if (window.self !== window.top) return ""; // no logout button from an iframe
+        return `
+            <a href="${toHref("/logout")}" data-link draggable="false">
+                <img class="component_icon" draggable="false" src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA0ODkuODg4IDQ4OS44ODgiIHN0eWxlPSJlbmFibGUtYmFja2dyb3VuZDpuZXcgMCAwIDQ4OS44ODggNDg5Ljg4ODsiPgogIDxwYXRoIGZpbGw9IiM2ZjZmNmYiIGQ9Ik0yNS4zODMsMjkwLjVjLTcuMi03Ny41LDI1LjktMTQ3LjcsODAuOC0xOTIuM2MyMS40LTE3LjQsNTMuNC0yLjUsNTMuNCwyNWwwLDBjMCwxMC4xLTQuOCwxOS40LTEyLjYsMjUuNyAgICBjLTM4LjksMzEuNy02Mi4zLDgxLjctNTYuNiwxMzYuOWM3LjQsNzEuOSw2NSwxMzAuMSwxMzYuOCwxMzguMWM5My43LDEwLjUsMTczLjMtNjIuOSwxNzMuMy0xNTQuNWMwLTQ4LjYtMjIuNS05Mi4xLTU3LjYtMTIwLjYgICAgYy03LjgtNi4zLTEyLjUtMTUuNi0xMi41LTI1LjZsMCwwYzAtMjcuMiwzMS41LTQyLjYsNTIuNy0yNS42YzUwLjIsNDAuNSw4Mi40LDEwMi40LDgyLjQsMTcxLjhjMCwxMjYuOS0xMDcuOCwyMjkuMi0yMzYuNywyMTkuOSAgICBDMTIyLjE4Myw0ODEuOCwzNS4yODMsMzk2LjksMjUuMzgzLDI5MC41eiBNMjQ0Ljg4MywwYy0xOCwwLTMyLjUsMTQuNi0zMi41LDMyLjV2MTQ5LjdjMCwxOCwxNC42LDMyLjUsMzIuNSwzMi41ICAgIHMzMi41LTE0LjYsMzIuNS0zMi41VjMyLjVDMjc3LjM4MywxNC42LDI2Mi44ODMsMCwyNDQuODgzLDB6IiAvPgo8L3N2Zz4K" alt="power">
+            </a>
+        `;
+    }
+
+    __normalised(path) {
+        if (path === null) return null;
+        else if (path.endsWith("/") === false) return path;
+        return path.replace(new RegExp("/$"), "");
+    }
+}
+
+export function init() {
+    return loadCSS(import.meta.url, "./breadcrumb.css");
+}
+
+customElements.define("component-breadcrumb", ComponentBreadcrumb);

@@ -1,0 +1,22 @@
+diff --git a/public/assets/components/decorator_shell_filemanager.js b/public/assets/components/decorator_shell_filemanager.js
+index a499e5ef..caebd17c 100644
+--- a/public/assets/components/decorator_shell_filemanager.js
++++ b/public/assets/components/decorator_shell_filemanager.js
+@@ -18,3 +18,4 @@ export default function(ctrl) {
+                 <component-breadcrumb path="${safe(urlToPath(history.state.previous))}"></component-breadcrumb>
+                 <main id="main" data-bind="filemanager-children"></main>
+             </div>
++            <component-shell class="hidden" path="${safe(urlToPath(history.state.previous))}"></component-shell>
+@@ -51,3 +52,12 @@ export default function(ctrl) {
+                 navigate(p.join("/") + "/" + location.hash);
+             }),
+         ));
++
++        // feature4: webshell
++        const $shell = qs($page, "component-shell");
++        $shell.setAttribute("path", urlToPath(fromHref(location.pathname + location.hash)));
++        effect(rxjs.fromEvent(window, "keydown").pipe(
++            rxjs.filter((e) => ["F4", "F9"].indexOf(e.code) !== -1),
++            rxjs.switchMap(() => import(new URL("../components/shell.js", import.meta.url).href)),
++            rxjs.tap(() => $shell.classList.toggle("hidden")),
++        ));

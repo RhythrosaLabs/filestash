@@ -1,0 +1,8 @@
+.component_page_connect{
+    background: var(--primary);
+    height: 100%;
+    padding: 15px 0 0 0;
+}
+.dark-mode .component_page_connect{
+    background: var(--bg-color);
+}

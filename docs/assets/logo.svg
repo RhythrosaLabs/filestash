@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="160" height="160" viewBox="0 0 160 160" role="img" aria-label="Sensorium logo">
+  <defs>
+    <linearGradient id="sn" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#22d3ee"/>
+      <stop offset=".5" stop-color="#8b7bff"/>
+      <stop offset="1" stop-color="#f472b6"/>
+    </linearGradient>
+  </defs>
+  <rect width="160" height="160" rx="40" fill="#0d0f17"/>
+  <rect x="1.5" y="1.5" width="157" height="157" rx="38.5" fill="none" stroke="url(#sn)" stroke-opacity=".55" stroke-width="3"/>
+  <g fill="none" stroke="url(#sn)" stroke-linecap="round">
+    <circle cx="80" cy="80" r="50" stroke-width="5" stroke-opacity=".35" stroke-dasharray="70 18"/>
+    <circle cx="80" cy="80" r="34" stroke-width="6" stroke-opacity=".7" stroke-dasharray="48 14"/>
+  </g>
+  <path fill="url(#sn)" d="M80 58c1.2 11.8 7.9 19.8 22 22-14.1 2.2-20.8 10.2-22 22-1.2-11.8-7.9-19.8-22-22 14.1-2.2 20.8-10.2 22-22z"/>
+</svg>

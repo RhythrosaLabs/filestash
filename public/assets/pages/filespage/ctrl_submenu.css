@@ -1,0 +1,129 @@
+/* General design */
+[is="component_submenu"] {
+    margin-top: 10px;
+    position: sticky;
+    top: 0;
+    z-index: 3;
+    padding: 4px 0;
+    transition: 0.2s ease box-shadow;
+}
+[is="component_submenu"]::before {
+    content: "";
+    backdrop-filter: blur(15px) saturate(2);
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+}
+.scrolling [is="component_submenu"] {
+    box-shadow: 0 5px 10px rgba(100,100,100,.05);
+    background: rgba(245,245,245,0.9);
+    border-bottom: 1px solid rgba(0,0,0,0.02);
+}
+[is="component_submenu"] .component_submenu {
+    display: flex;
+    justify-content: space-between;
+    padding: 0 15px;
+}
+[is="component_submenu"] .component_submenu::-webkit-scrollbar {
+    display: none;
+}
+[is="component_submenu"] .component_submenu .action button {
+    padding: 6px 10px;
+    background: transparent;
+    text-transform: uppercase;
+    font-size: 0.8rem;
+    color: var(--light);
+    letter-spacing: 0;
+    border-radius: 5px;
+    line-height: 15px;
+}
+[is="component_submenu"] .component_submenu .action button img {
+    width: 15px;
+    height: 15px;
+    margin-left: -3px;
+    margin-right: -3px;
+}
+.touch-yes [is="component_submenu"] .component_submenu .action button img {
+    width: 16px;
+    height: 16px;
+}
+[is="component_submenu"] .component_submenu .action.left {
+    margin-right: 2px;
+    display: flex;
+}
+[is="component_submenu"] .component_submenu .action.left button {
+    min-width: 50px;
+}
+[is="component_submenu"] .component_submenu .action.right.hover,
+.touch-no [is="component_submenu"] .component_submenu .action.right:hover,
+.touch-yes [is="component_submenu"] .component_submenu .action.right,
+.touch-yes [is="component_submenu"] .component_submenu .action.left {
+    background: var(--border);
+}
+.touch-no [is="component_submenu"] .component_submenu .action button:hover {
+    filter: brightness(0.9);
+    background: var(--border);
+}
+.touch-no [is="component_submenu"] .component_submenu .action button:active,
+[is="component_submenu"] .component_submenu .action button:active {
+    filter: brightness(0.75);
+    background: var(--border);
+}
+[is="component_submenu"] .component_submenu .action.left,
+[is="component_submenu"] .component_submenu .action.right {
+    border-radius: 5px;
+    white-space: nowrap;
+}
+[is="component_submenu"] .component_submenu .action.right button[data-bind="clear"] {
+    display: flex;
+    align-items: center;
+    background: var(--border);
+    font-weight: bold;
+}
+[is="component_submenu"] .component_submenu .action.right button[data-bind="clear"] img {
+    padding-left: 2px;
+}
+[is="component_submenu"] .component_submenu .action form input[name="q"] {
+    background: transparent;
+    border: none;
+    padding-left: 5px;
+    color: var(--color);
+    font-size: 0.95rem;
+}
+
+/* dark mode */
+.dark-mode [is="component_submenu"] .component_submenu .action button img {
+    filter: brightness(70%) invert(1);
+}
+.dark-mode [is="component_submenu"] .component_submenu .action button {
+    color: var(--light);
+    font-weight: bold;
+}
+.dark-mode .scrolling [is="component_submenu"] {
+    background: rgba(43, 45, 48, 0.99);
+}
+
+/* ripple effect */
+.touch-no [is="component_submenu"] .component_submenu .action button {
+    position: relative;
+    overflow: hidden;
+}
+.touch-no [is="component_submenu"] .component_submenu .action button::after {
+    content: "";
+    position: absolute;
+    top: 50%; left: 50%;
+    width: 10px;
+    height: 10px;
+    background: var(--color);
+    border-radius: 50%;
+    transform: translate(-50%, -50%) scale(0);
+    opacity: 0;
+    pointer-events: none;
+}
+.touch-no [is="component_submenu"] .component_submenu .action button:active::after {
+    animation: ripple 0.2s ease-out;
+}
+@keyframes ripple {
+    0% { transform: translate(-50%, -50%) scale(0); opacity: 0.2; }
+    100% { transform: translate(-50%, -50%) scale(20); opacity: 0; }
+}

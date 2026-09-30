@@ -1,0 +1,48 @@
+{
+    "compilerOptions": {
+        "allowJs": true,
+        "allowUnreachableCode": false,
+        "allowUnusedLabels": false,
+        "alwaysStrict": true,
+        "checkJs": true,
+        "exactOptionalPropertyTypes": true,
+        "forceConsistentCasingInFileNames": true,
+        "isolatedModules": true,
+        "noEmit": true,
+        "noErrorTruncation": true,
+        "noImplicitReturns": true,
+        "noImplicitThis": true,
+        "noImplicitOverride": true,
+        "noPropertyAccessFromIndexSignature": true,
+        "noImplicitAny": false,
+        "noUnusedLocals": true,
+        "noUnusedParameters": true,
+        "noUncheckedIndexedAccess": true,
+        "strictNullChecks": true,
+        "strictPropertyInitialization": true,
+        "strictBindCallApply": true,
+        "strictFunctionTypes": true,
+        "strict": true,
+        "lib": [
+            "dom",
+            "dom.iterable",
+            "es2022"
+        ],
+        "module": "es2022",
+        "moduleResolution": "bundler",
+        "target": "es2022",
+        "typeRoots": []
+    },
+    "include": [
+        "assets/boot/*.js",
+        "assets/pages/*.js",
+        "global.d.ts"
+    ],
+    "exclude": [
+        "**/*.test.js",
+        "assets/worker/sw_cache.js",
+        "coverage",
+        "vite.config.js",
+        "jest.setup.js"
+    ]
+}

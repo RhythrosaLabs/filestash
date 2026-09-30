@@ -1,0 +1,166 @@
+@import url("./designsystem_input.css");
+@import url("./designsystem_textarea.css");
+@import url("./designsystem_inputgroup.css");
+@import url("./designsystem_checkbox.css");
+@import url("./designsystem_formbuilder.css");
+@import url("./designsystem_button.css");
+@import url("./designsystem_icon.css");
+@import url("./designsystem_container.css");
+@import url("./designsystem_box.css");
+@import url("./designsystem_darkmode.css");
+@import url("./designsystem_skeleton.css");
+@import url("./designsystem_utils.css");
+@import url("./designsystem_alert.css");
+
+:root {
+    --bg-color: #f9f9fa;
+    --color: #343637;
+    --emphasis: #466372;
+    --primary: #9AD1ED;
+    --emphasis-primary: #c5e2f1;
+    --emphasis-secondary: #466372;
+    --light: #555758;
+    --super-light:  #fafafa;
+    --error: #f26d6d;
+    --success: #63d9b1;
+    --dark: #24272a;
+    --surface: #525659;
+
+    --border: rgba(198,200,204,0.25);
+}
+
+html {
+    font-family: system-ui, sans-serif;
+    -webkit-text-size-adjust:100%;
+    font-smoothing: antialiased;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+}
+body {
+    overflow: hidden;
+    background: var(--bg-color);
+    color: var(--color);
+}
+body, html {
+    height: 100%;
+    margin: 0;
+}
+
+a {
+    color: inherit;
+    text-decoration: none;
+}
+
+select {
+    -webkit-appearance: none;
+    -moz-appearance: none;
+}
+
+select:-moz-focusring {
+    color: transparent;
+    outline: none;
+    border: none;
+}
+
+select::-ms-expand {
+    display: none;
+}
+
+button::-moz-focus-inner {
+    border: 0;
+}
+
+input, textarea, select {
+    transition: border 0.2s;
+    outline: none;
+}
+
+button:focus,
+a:focus,
+a:active,
+button::-moz-focus-inner,
+input[type="reset"]::-moz-focus-inner,
+input[type="button"]::-moz-focus-inner,
+input[type="submit"]::-moz-focus-inner,
+select::-moz-focus-inner,
+input[type="file"]>input[type="button"]::-moz-focus-inner {
+    outline: none !important;
+}
+
+select:-moz-focusring {
+    color: transparent;
+    text-shadow: 0 0 0 #000;
+}
+
+#app { height: 100%; }
+
+.connect-form input:hover,
+.connect-form textarea:hover,
+.connect-form input:focus,
+.connect-form textarea:focus {
+    border-color: rgb(154, 209, 237)!important;
+}
+
+.drag-drop {
+    z-index: 2;
+}
+
+.drag-drop.dragging>div {
+    background: rgba(0, 0, 0, 0.1);
+}
+
+
+/* CONNECTION FORM */
+
+.login-form button.active {
+    box-shadow: 0px 1px 5px rgba(0, 0, 0, 0.20);
+}
+
+::-webkit-scrollbar {
+    height: 4px;
+    width: 4px
+}
+
+::-webkit-scrollbar-track {
+    background: rgba(0, 0, 0, .1)
+}
+
+::-webkit-scrollbar-thumb {
+    border-radius: 2px;
+    background: rgba(0, 0, 0, .2);
+}
+
+.scroll-y {
+    flex: 1;
+    overflow-y: scroll;
+    overflow-x: hidden;
+    scrollbar-3dlight-color: #7d7e94;
+    scrollbar-arrow-color: #c1c1d1;
+    scrollbar-darkshadow-color: #2d2c4d;
+    scrollbar-face-color: rgba(0, 0, 0, .1);
+    scrollbar-highlight-color: #7d7e94;
+    scrollbar-shadow-color: #2d2c4d;
+    scrollbar-track-color: rgba(0, 0, 0, .1);
+}
+
+/* skip link */
+body > a[aria-role="navigation"] {
+    position: absolute;
+    left: -999px;
+    top: auto;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+}
+body > a[aria-role="navigation"]:focus-visible {
+    position: fixed;
+    top: 8px;
+    width: fit-content;
+    height: auto;
+    border-radius: 5px;
+    padding: 5px 10px;
+    outline: 2px solid;
+    z-index: 10;
+    left: 50%;
+    background: white
+}

@@ -1,0 +1,39 @@
+button {
+  border: none;
+  margin: 0;
+  padding: 6px;
+  display: inline-block;
+  cursor: pointer;
+  font-size: inherit;
+  border-radius: 3px;
+  color: rgba(0,0,0,0.6);
+  background: inherit;
+  line-height: 1rem;
+}
+button.primary {
+    background: var(--primary);
+    color: white;
+}
+button.emphasis {
+    background: var(--emphasis);
+    color: white;
+}
+button.dark {
+    background: var(--dark);
+    color: white;
+}
+button.light {
+    background: #e2e2e2;
+    color: var(--dark);
+}
+button.large {
+    width: 100%;
+}
+button[disabled] {
+    opacity: 0.9;
+}
+
+.touch-no button.dark:hover, .touch-no button.emphasis:hover, .touch-no button.primary:hover {
+  filter: brightness(95%);
+  transition: 0.2s ease all;
+}

@@ -1,0 +1,109 @@
+.component_menu_sidebar {
+    height: 100vh;
+    background: linear-gradient(#232628, #2c3032);
+    width: 250px;
+    border-right: 2px solid var(--color);
+    padding: 50px 0px 0px 40px;
+    transition: transform 0.3s ease;
+    transition-delay: 0s;
+    flex-shrink: 0;
+}
+.component_menu_sidebar h2 {
+    font-family: "Source Code Pro", monospace;
+    color: white;
+    font-weight: normal;
+    font-size: 1.5rem;
+    line-height: 1.5rem;
+    margin: 25px 0 40px 0;
+}
+.component_menu_sidebar ul {
+    color: rgba(255, 255, 255, 0.5);
+    list-style-type: none;
+    padding: 0;
+}
+.component_menu_sidebar ul li {
+    margin: 15px 0;
+}
+.component_menu_sidebar ul li a.active, .component_menu_sidebar ul li a:hover {
+    color: white;
+}
+.component_menu_sidebar ul li.version {
+    position: absolute;
+    bottom: 0;
+    opacity: 0.25;
+}
+.component_menu_sidebar ul li a {
+    display: inline-block;
+}
+.component_menu_sidebar .header {
+    display: block;
+    height: 40px;
+}
+.component_menu_sidebar .header svg {
+    width: 40px;
+    height: 40px;
+}
+.component_menu_sidebar .header svg.arrow_left {
+    position: absolute;
+    margin-left: -35px;
+    opacity: 0.7;
+    padding: 8px;
+    box-sizing: border-box;
+    fill: #6f6f6f;
+}
+.component_menu_sidebar .header svg.logo {
+    transform: scale(1.4);
+    color: #9AD1ED;
+}
+
+@media screen and (max-width: 760px) {
+    .component_menu_sidebar .header svg.arrow_left {
+        display: none;
+    }
+}
+@media screen and (max-width: 1000px) {
+    .component_menu_sidebar {
+        padding-left: 30px;
+        width: 200px;
+    }
+    .component_menu_sidebar h2 {
+        font-size: 1.35em;
+    }
+}
+@media screen and (max-width: 760px) {
+    .component_menu_sidebar {
+        padding: 25px 10px;
+    }
+    .component_menu_sidebar h2 {
+        margin: 15px 0 25px 0;
+        font-size: 1.25em;
+        padding: 0;
+    }
+    .component_menu_sidebar .version {
+        display: none;
+    }
+}
+@media screen and (max-width: 650px) {
+    .component_menu_sidebar { width: 100px; }
+    .component_menu_sidebar h2 { display: none; }
+}
+@media screen and (max-width: 500px) {
+    .component_page_admin { flex-wrap: wrap; }
+
+    .component_menu_sidebar {
+        width: 100%;
+        height: initial;
+        display: flex;
+        padding: 10px;
+        border-bottom: 2px solid var(--color);
+    }
+    .component_menu_sidebar ul {
+        margin: 0;
+        display: flex;
+        align-items: center;
+        padding-left: 10px;
+    }
+    .component_menu_sidebar ul li {
+        margin: 0 10px;
+    }
+}

@@ -1,0 +1,152 @@
+#[macro_export]
+macro_rules! register {
+    ($app:ident : $head:ident $(+ $rest:ident)*) => {
+        ::std::thread_local! {
+            static APP: $app = <$app as ::std::default::Default>::default();
+        }
+
+        #[no_mangle]
+        pub extern "C" fn init() {
+            $crate::logger::init();
+            APP.with(|_| {});
+        }
+
+        $crate::register!(@capability APP, $app, $head);
+        $( $crate::register!(@capability APP, $app, $rest); )*
+    };
+
+    (@capability $anchor:ident, $app:ident, Authorisation) => {
+        #[no_mangle]
+        pub extern "C" fn capability_authorisation() {}
+        #[no_mangle]
+        pub extern "C" fn authorisation_ls() {
+            let path = $crate::authorisation::authorisation_pull_path();
+            $anchor.with(|app| <$app as $crate::Authorisation>::ls(app, &$crate::ContextImpl, &path)).apply();
+        }
+        #[no_mangle]
+        pub extern "C" fn authorisation_cat() {
+            let path = $crate::authorisation::authorisation_pull_path();
+            $anchor.with(|app| <$app as $crate::Authorisation>::cat(app, &$crate::ContextImpl, &path)).apply();
+        }
+        #[no_mangle]
+        pub extern "C" fn authorisation_stat() {
+            let path = $crate::authorisation::authorisation_pull_path();
+            $anchor.with(|app| <$app as $crate::Authorisation>::stat(app, &$crate::ContextImpl, &path)).apply();
+        }
+        #[no_mangle]
+        pub extern "C" fn authorisation_mkdir() {
+            let path = $crate::authorisation::authorisation_pull_path();
+            $anchor.with(|app| <$app as $crate::Authorisation>::mkdir(app, &$crate::ContextImpl, &path)).apply();
+        }
+        #[no_mangle]
+        pub extern "C" fn authorisation_rm() {
+            let path = $crate::authorisation::authorisation_pull_path();
+            $anchor.with(|app| <$app as $crate::Authorisation>::rm(app, &$crate::ContextImpl, &path)).apply();
+        }
+        #[no_mangle]
+        pub extern "C" fn authorisation_mv() {
+            let from = $crate::authorisation::authorisation_pull_path();
+            let to = $crate::authorisation::authorisation_pull_target();
+            $anchor.with(|app| <$app as $crate::Authorisation>::mv(app, &$crate::ContextImpl, &from, &to)).apply();
+        }
+        #[no_mangle]
+        pub extern "C" fn authorisation_save() {
+            let path = $crate::authorisation::authorisation_pull_path();
+            $anchor.with(|app| <$app as $crate::Authorisation>::save(app, &$crate::ContextImpl, &path)).apply();
+        }
+        #[no_mangle]
+        pub extern "C" fn authorisation_touch() {
+            let path = $crate::authorisation::authorisation_pull_path();
+            $anchor.with(|app| <$app as $crate::Authorisation>::touch(app, &$crate::ContextImpl, &path)).apply();
+        }
+    };
+
+    (@capability $anchor:ident, $app:ident, Authentication) => {
+        #[no_mangle]
+        pub extern "C" fn capability_authentication() {}
+        #[no_mangle]
+        pub extern "C" fn authentication_setup() {
+            $crate::authentication::authentication_push_setup(
+                &<$app as $crate::Authentication>::setup(),
+            );
+        }
+        #[no_mangle]
+        pub extern "C" fn authentication_entrypoint() {
+            let idp = $crate::authentication::authentication_pull_idp();
+            let mut res = $crate::ResponseImpl;
+            if let Err(err) = <$app as $crate::Authentication>::entrypoint(idp, &$crate::RequestImpl, &mut res) {
+                $crate::authentication::authentication_push_error(&err);
+            }
+        }
+        #[no_mangle]
+        pub extern "C" fn authentication_callback() {
+            let form = $crate::authentication::authentication_pull_form();
+            let idp = $crate::authentication::authentication_pull_idp();
+            let mut res = $crate::ResponseImpl;
+            match <$app as $crate::Authentication>::callback(form, idp, &mut res) {
+                Ok(session) => $crate::authentication::authentication_push_session(&session),
+                Err(err) => $crate::authentication::authentication_push_error(&err),
+            }
+        }
+    };
+
+    (@capability $anchor:ident, $app:ident, Http) => {
+        #[no_mangle]
+        pub extern "C" fn capability_http() {}
+        #[no_mangle]
+        pub extern "C" fn http_describe() {
+            let mut router = $crate::Router::new();
+            <$app as $crate::Http>::routes(&mut router);
+            router.describe();
+        }
+        #[no_mangle]
+        pub extern "C" fn http() {
+            let method = $crate::RequestImpl.method();
+            let path = $crate::RequestImpl.path();
+            let mut router = $crate::Router::new();
+            <$app as $crate::Http>::routes(&mut router);
+            let mut res = $crate::ResponseImpl;
+            $anchor.with(|app| router.dispatch(app, &method, &path, &$crate::RequestImpl, &mut res));
+        }
+    };
+
+    (@capability $anchor:ident, $app:ident, OnInit) => {
+        #[no_mangle]
+        pub extern "C" fn capability_on_init() {}
+        #[no_mangle]
+        pub extern "C" fn on_init() {
+            $anchor.with(|app| <$app as $crate::OnInit>::on_init(app));
+        }
+    };
+
+    (@capability $anchor:ident, $app:ident, OnChanges) => {
+        #[no_mangle]
+        pub extern "C" fn capability_on_changes() {}
+        #[no_mangle]
+        pub extern "C" fn on_changes() {
+            $anchor.with(|app| <$app as $crate::OnChanges>::on_changes(app));
+        }
+    };
+
+    (@capability $anchor:ident, $app:ident, OnDestroy) => {
+        #[no_mangle]
+        pub extern "C" fn capability_on_destroy() {}
+        #[no_mangle]
+        pub extern "C" fn on_destroy() {
+            $anchor.with(|app| <$app as $crate::OnDestroy>::on_destroy(app));
+        }
+    };
+
+    (@capability $anchor:ident, $app:ident, Middleware) => {
+        #[no_mangle]
+        pub extern "C" fn capability_middleware() {}
+        #[no_mangle]
+        pub extern "C" fn middleware() {
+            let mut res = $crate::Response;
+            $anchor
+                .with(|app| <$app as $crate::Middleware>::handle(app, &$crate::RequestImpl, &mut res))
+                .apply();
+        }
+    };
+
+}

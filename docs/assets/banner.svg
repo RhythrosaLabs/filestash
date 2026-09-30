@@ -1,0 +1,28 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="400" viewBox="0 0 1280 400" role="img" aria-label="Sensorium: every drive, cloud, inbox and feed, sensed as one">
+  <defs>
+    <radialGradient id="g1" cx=".15" cy=".1" r=".7"><stop offset="0" stop-color="#8b7bff" stop-opacity=".35"/><stop offset="1" stop-color="#8b7bff" stop-opacity="0"/></radialGradient>
+    <radialGradient id="g2" cx=".95" cy=".95" r=".6"><stop offset="0" stop-color="#f472b6" stop-opacity=".22"/><stop offset="1" stop-color="#f472b6" stop-opacity="0"/></radialGradient>
+    <radialGradient id="g3" cx=".9" cy=".05" r=".5"><stop offset="0" stop-color="#22d3ee" stop-opacity=".2"/><stop offset="1" stop-color="#22d3ee" stop-opacity="0"/></radialGradient>
+    <linearGradient id="txt" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#22d3ee"/><stop offset=".5" stop-color="#8b7bff"/><stop offset="1" stop-color="#f472b6"/></linearGradient>
+  </defs>
+  <rect width="1280" height="400" fill="#07080c"/>
+  <rect width="1280" height="400" fill="url(#g1)"/><rect width="1280" height="400" fill="url(#g2)"/><rect width="1280" height="400" fill="url(#g3)"/>
+  <g transform="translate(110 85)">  <defs>
+    <linearGradient id="snl" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#22d3ee"/>
+      <stop offset=".5" stop-color="#8b7bff"/>
+      <stop offset="1" stop-color="#f472b6"/>
+    </linearGradient>
+  </defs>
+  <rect width="160" height="160" rx="40" fill="#0d0f17"/>
+  <rect x="1.5" y="1.5" width="157" height="157" rx="38.5" fill="none" stroke="url(#snl)" stroke-opacity=".55" stroke-width="3"/>
+  <g fill="none" stroke="url(#snl)" stroke-linecap="round">
+    <circle cx="80" cy="80" r="50" stroke-width="5" stroke-opacity=".35" stroke-dasharray="70 18"/>
+    <circle cx="80" cy="80" r="34" stroke-width="6" stroke-opacity=".7" stroke-dasharray="48 14"/>
+  </g>
+  <path fill="url(#snl)" d="M80 58c1.2 11.8 7.9 19.8 22 22-14.1 2.2-20.8 10.2-22 22-1.2-11.8-7.9-19.8-22-22 14.1-2.2 20.8-10.2 22-22z"/>
+</g>
+  <text x="310" y="200" font-family="-apple-system, SF Pro Display, Inter, Segoe UI, Helvetica, Arial, sans-serif" font-size="96" font-weight="800" fill="url(#txt)" letter-spacing="-4">Sensorium</text>
+  <text x="314" y="256" font-family="-apple-system, SF Pro Text, Inter, Segoe UI, Helvetica, Arial, sans-serif" font-size="30" fill="#cbd5e1">Every drive, cloud, inbox &amp; feed, sensed as one.</text>
+  <text x="314" y="302" font-family="-apple-system, SF Pro Text, Inter, Segoe UI, Helvetica, Arial, sans-serif" font-size="21" fill="#9aa1b2" letter-spacing="1">SELF-HOSTED · LOCAL AI · SOCIAL AUTOPILOT · BUILT ON FILESTASH</text>
+</svg>

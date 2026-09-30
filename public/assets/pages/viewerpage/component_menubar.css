@@ -1,0 +1,95 @@
+.component_menubar {
+    background: var(--dark);
+    color: #f1f1f1;
+    position: relative;
+    display: block;
+    box-shadow: 0 0px 5px 0 rgba(0, 0, 0, 0.14), 0 1px 10px 0 rgba(0, 0, 0, 0.12), 0 2px 4px -1px rgba(0, 0, 0, 0.2);
+    z-index: 4;
+    text-align: left;
+}
+.component_menubar .container {
+    padding: 0;
+    font-size: 0.9em;
+}
+.component_menubar .container.inherit-width { max-width: inherit!important; }
+.component_menubar .container > span {
+    display: flex;
+}
+.component_menubar .titlebar {
+    flex: 1;
+    padding: 8px 0;
+    width: 0;
+    letter-spacing: 0.3px;
+    padding-left: 5px;
+    line-height: 19px;
+}
+.component_menubar .action-item {
+    padding-right: 10px;
+    display: flex;
+    align-items: center;
+}
+.component_menubar .action-item button {
+    padding: 0;
+}
+.component_menubar .action-item .component_icon {
+    height: 19px;
+    width: 19px;
+    cursor: pointer;
+    padding: 0 3px;
+}
+.component_menubar .action-item .download-button .component_icon {
+    padding-right: 1px;
+}
+.component_menubar .action-item .btn {
+    background: #e2e2e2;
+    color: rgba(0,0,0,0.6);
+    padding: 0 5px;
+    border-radius: 2px;
+    cursor: pointer;
+    text-transform: uppercase;
+    font-weight: bold;
+}
+.component_menubar select {
+    background: #f2f2f2;
+    color: var(--color);
+    border: 2px solid #f2f2f2;
+    border-radius: 2px;
+    padding: 0 3px 0 3px;
+    margin: 0 3px;
+}
+
+.dark-mode .component_menubar {
+    background: var(--bg-color);
+}
+.dark-mode .component_menubar .container {
+    color: inherit;
+}
+
+.touch-yes .component_menubar .action-item .component_icon {
+    height: 21px;
+    width: 21px;
+}
+
+/* icons in additional menu */
+.component_menubar .action-item [is="component-dropdown"] .dropdown_button {
+    border: none;
+    padding: 2px 0px;
+    margin: 0;
+}
+
+/* chromecast */
+:root {
+    --disconnected-color: #F2F2F2;
+    --connected-color: var(--primary);
+}
+
+google-cast-launcher {
+    display: inline-block;
+    height: 23px;
+    width: 23px;
+    cursor: pointer;
+    padding: 0 5px;
+    position: relative;
+    top: 1px;
+    cursor: pointer;
+}

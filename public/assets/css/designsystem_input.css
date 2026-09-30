@@ -1,0 +1,51 @@
+.component_input, .component_select {
+  background: inherit;
+  border: none;
+  border-radius: 0;
+  width: 100%;
+  display: inline-block;
+  font-family: "San Francisco","Roboto","Arial",sans-serif;
+  -webkit-text-size-adjust: 100%;
+  font-size: 16px;
+  padding: 5px 0px 5px 0px;
+  margin: 0 0 8px 0;
+  outline: none;
+  box-sizing: border-box;
+  color: inherit;
+  border-bottom: 2px solid rgba(70, 99, 114, 0.1);
+  transition: border-color 0.2s ease-out;
+  height: 31px;
+}
+
+.component_input:focus, .component_select:focus, .component_input:focus ~ component-icon img {
+    border-color: var(--emphasis-primary)!important;
+}
+
+input.component_input[disabled], textarea.component_textarea[disabled] {
+    cursor: pointer;
+    opacity: 0.8;
+}
+
+.component_input[type="file"] { border: none; margin-bottom: 0; }
+.component_input[type="file"]::file-selector-button {
+    border-radius: 3px;
+    background-color: transparent;
+    border: 2px solid var(--border);
+    display: block;
+    transition: 0.1s all;
+    color: inherit;
+    cursor: pointer;
+}
+.component_input[type="file"]::file-selector-button:hover {
+    background-color: var(--border);
+    border-color: var(--border);
+}
+
+.component_input:-webkit-autofill,
+.component_input:-webkit-autofill:focus {
+    transition: background-color 600000s 0s, color 600000s 0s;
+}
+
+.component_input[data-autocompleted] {
+    background-color: transparent !important;
+}
