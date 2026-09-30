@@ -24,7 +24,19 @@ Get-Content .env | Where-Object { $_ -match '^\s*([A-Z_]+)=(.*)$' } | ForEach-Ob
 New-Item -ItemType Directory -Force rclone | Out-Null
 
 $profileArgs = @()
+$lmModel = $null
 if (-not $vars["AI_BASE_URL"]) {
+    try {
+        $models = Invoke-RestMethod -TimeoutSec 2 http://localhost:1234/v1/models
+        $lmModel = ($models.data | Where-Object { $_.id -notmatch "embed" } | Select-Object -First 1).id
+    } catch {}
+}
+if (-not $vars["AI_BASE_URL"] -and $lmModel) {
+    Write-Host "==> using LM Studio's server on this computer, model: $lmModel"
+    $env:AI_BASE_URL = "http://host.docker.internal:1234/v1"
+    if (-not $vars["AI_MODEL"] -or $vars["AI_MODEL"] -eq "qwen3:8b") { $env:AI_MODEL = $lmModel }
+    if (-not $vars["AI_API_KEY"]) { $env:AI_API_KEY = "lm-studio" }
+} elseif (-not $vars["AI_BASE_URL"]) {
     try {
         Invoke-WebRequest -UseBasicParsing -TimeoutSec 2 http://localhost:11434/api/version | Out-Null
         Write-Host "==> using the Ollama app already running on this computer"

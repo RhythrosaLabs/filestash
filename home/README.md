@@ -6,8 +6,18 @@ Everything runs on your computer in Docker: Filestash, the AI assistant and a lo
 
 https://www.docker.com/products/docker-desktop/. Open it and wait until it says it's running.
 
-**Mac tip:** also install the [Ollama app](https://ollama.com/download). Models run much faster natively on Apple
-chips than inside Docker. The start script detects the app and uses it automatically.
+**For the AI, use one of these (fastest first):**
+
+- **LM Studio**, if you already have it: open it, load a model with tool use (e.g. *Qwen3 8B* or *Qwen3 14B*), then
+  start the server from the **Developer** tab (or run `lms server start`). The start script detects it and uses the
+  loaded model.
+- **Ollama app**: install it from [ollama.com/download](https://ollama.com/download) (Mac: `brew install ollama` also
+  works), then run `ollama pull qwen3:8b`. The start script detects it too.
+- **Neither**: the start script runs Ollama inside Docker and downloads `qwen3:8b` for you. This works everywhere, but
+  it's slower on a Mac because Docker can't use the Apple GPU.
+
+On Linux, LM Studio and the Ollama app only listen on localhost, where Docker can't reach them. Either let the script
+run Ollama in Docker, or set `AI_BASE_URL` in `home/.env` (for LM Studio, turn on *Serve on Local Network*).
 
 ## 2. Start
 
@@ -48,6 +58,7 @@ Edit `home/.env` and run the start script again:
 - `FILES_DIR`: the folder shown as "This computer" (default: your home folder)
 - `AI_MODEL`: any Ollama model with tool calling (`qwen3:8b`, `qwen3:14b`, `hermes3`, `llama3.1`)
 - `AI_BASE_URL` / `AI_API_KEY`: to use a hosted model instead, e.g. DeepSeek `https://api.deepseek.com/v1` and model `deepseek-chat`
+- LM Studio set by hand: `AI_BASE_URL=http://host.docker.internal:1234/v1`, `AI_MODEL=` the model id shown in LM Studio, `AI_API_KEY=lm-studio`
 - `JEV_API_KEY`: optional [TypeSafe Jev](https://typesafe.ai) key. It makes "sort these files" and inbox triage fast and cheap.
 
 The `.env` values are used the first time only. Afterwards, change them in the admin console

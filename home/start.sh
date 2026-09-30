@@ -18,7 +18,7 @@ if [ ! -f .env ]; then
 FILES_DIR="$HOME"
 # local model used by the assistant (needs tool calling: qwen3, hermes3, llama3.1, ...)
 AI_MODEL=qwen3:8b
-# leave empty to use Ollama. For DeepSeek: AI_BASE_URL=https://api.deepseek.com/v1, AI_MODEL=deepseek-chat, AI_API_KEY=sk-...
+# leave empty to use LM Studio's server or the Ollama app if one is running, else Ollama in Docker. For DeepSeek: AI_BASE_URL=https://api.deepseek.com/v1, AI_MODEL=deepseek-chat, AI_API_KEY=sk-...
 AI_BASE_URL=
 AI_API_KEY=
 # optional, from https://typesafe.ai
@@ -29,10 +29,25 @@ fi
 set -a; . ./.env; set +a
 mkdir -p rclone
 
+# first chat model LM Studio's server offers (embedding models can't chat)
+lmstudio_model() {
+    curl -s --max-time 2 http://localhost:1234/v1/models 2>/dev/null |
+        grep -o '"id" *: *"[^"]*"' | sed 's/.*: *"\(.*\)"/\1/' | grep -vi embed | head -n 1
+}
+
 PROFILE=""
 if [ -z "$AI_BASE_URL" ]; then
-    # the Ollama app is reachable from Docker Desktop on Mac, on Linux it only listens on localhost
-    if [ "$(uname)" = "Darwin" ] && curl -s --max-time 2 http://localhost:11434/api/version >/dev/null 2>&1; then
+    # apps on this computer are reachable from Docker Desktop on Mac, on Linux they only listen on localhost
+    LMSTUDIO_MODEL=""
+    [ "$(uname)" = "Darwin" ] && LMSTUDIO_MODEL=$(lmstudio_model)
+    if [ -n "$LMSTUDIO_MODEL" ]; then
+        echo "==> using LM Studio's server on this computer, model: $LMSTUDIO_MODEL"
+        echo "    (pick another with AI_MODEL= in home/.env; models with tool use work best, eg qwen3)"
+        AI_BASE_URL=http://host.docker.internal:1234/v1
+        [ "$AI_MODEL" = "qwen3:8b" ] && AI_MODEL="$LMSTUDIO_MODEL"
+        [ -z "$AI_API_KEY" ] && AI_API_KEY=lm-studio
+        export AI_MODEL AI_API_KEY
+    elif [ "$(uname)" = "Darwin" ] && curl -s --max-time 2 http://localhost:11434/api/version >/dev/null 2>&1; then
         echo "==> using the Ollama app already running on this computer"
         AI_BASE_URL=http://host.docker.internal:11434/v1
         if command -v ollama >/dev/null 2>&1; then ollama pull "$AI_MODEL"; fi

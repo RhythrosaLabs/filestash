@@ -11,7 +11,7 @@
   <a href="LICENSE"><img alt="License: AGPL-3.0" src="https://img.shields.io/badge/license-AGPL--3.0-8b7bff?style=flat-square"></a>
   <img alt="Go" src="https://img.shields.io/badge/Go-1.26-22d3ee?style=flat-square&logo=go&logoColor=white">
   <img alt="Docker" src="https://img.shields.io/badge/run%20with-Docker-2496ED?style=flat-square&logo=docker&logoColor=white">
-  <img alt="Local AI" src="https://img.shields.io/badge/AI-local%20first%20(Ollama)-f472b6?style=flat-square">
+  <img alt="Local AI" src="https://img.shields.io/badge/AI-local%20first%20(Ollama%20%7C%20LM%20Studio)-f472b6?style=flat-square">
   <img alt="MCP" src="https://img.shields.io/badge/MCP-SSE%20%2B%20Streamable%20HTTP-a598ff?style=flat-square">
   <a href="DONATE.md"><img alt="Donate with PayPal" src="https://img.shields.io/badge/donate-PayPal%20%40noodlebake-00457C?style=flat-square&logo=paypal&logoColor=white"></a>
 </p>
@@ -86,8 +86,9 @@ by Sensorium.</sub>
 
 ## 🚀 Quick start
 
-You need [Docker Desktop](https://www.docker.com/products/docker-desktop/). On a Mac, also install the
-[Ollama app](https://ollama.com/download) for fast, native local AI.
+You need [Docker Desktop](https://www.docker.com/products/docker-desktop/). For fast local AI, have **LM Studio**
+(with its server started) or the [Ollama app](https://ollama.com/download) running. The start script finds either one,
+or runs Ollama in Docker for you.
 
 ```sh
 git clone https://github.com/RhythrosaLabs/sensorium.git
@@ -96,8 +97,8 @@ cd sensorium/home
 powershell -ExecutionPolicy Bypass -File .\start.ps1    # Windows
 ```
 
-The script checks Docker and uses your Ollama app if it's running (otherwise it starts Ollama in Docker and downloads
-the model). It then builds Sensorium and opens **http://localhost:8334**. The first run takes 5 to 15 minutes; after
+The script checks Docker, then uses LM Studio or the Ollama app if one is running (otherwise it starts Ollama in Docker
+and downloads the model). It then builds Sensorium and opens **http://localhost:8334**. The first run takes 5 to 15 minutes; after
 that it starts in seconds.
 
 1. Choose an admin password.
@@ -132,7 +133,7 @@ SHA-256), create folders, move and rename, classify many files at once (with Jev
 
 | | Setting | Notes |
 |---|---|---|
-| Local, free | Ollama `qwen3:8b` (default), `qwen3:14b`, `hermes3`, `llama3.1` | Pick a model with the **tools** tag. For routines that describe photos, a vision model like `qwen2.5vl` or `gemma3` sees the image. |
+| Local, free | LM Studio or Ollama: `qwen3:8b` (default), `qwen3:14b`, `hermes3`, `llama3.1` | Pick a model with the **tools** tag. For routines that describe photos, a vision model like `qwen2.5vl` or `gemma3` sees the image. |
 | Hosted | DeepSeek (`https://api.deepseek.com/v1`, `deepseek-chat`), OpenRouter, any OpenAI-compatible API | Faster on small machines; your prompts then go to that provider. |
 
 ## 📣 Social autopilot
