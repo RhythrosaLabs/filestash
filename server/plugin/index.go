@@ -21,6 +21,7 @@ import (
 	_ "github.com/mickael-kerjean/filestash/server/plugin/plg_backend_nop"
 	_ "github.com/mickael-kerjean/filestash/server/plugin/plg_backend_perkeep"
 	_ "github.com/mickael-kerjean/filestash/server/plugin/plg_backend_psql"
+	_ "github.com/mickael-kerjean/filestash/server/plugin/plg_backend_rclone"
 	_ "github.com/mickael-kerjean/filestash/server/plugin/plg_backend_s3"
 	_ "github.com/mickael-kerjean/filestash/server/plugin/plg_backend_samba"
 	_ "github.com/mickael-kerjean/filestash/server/plugin/plg_backend_sftp"
